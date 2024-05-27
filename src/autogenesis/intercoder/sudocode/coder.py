@@ -1,5 +1,6 @@
 import functools
 import inspect
+import json
 import logging
 import os
 import pickle
@@ -271,32 +272,36 @@ def run_all_code_agents() -> bool:
         logging.info(f'Day {round_info.round}: already have {_OUTPUT}')
         return True
     
-    if round_info.dead():
-        logging.info(f'Take too long, give up')
-        return True
-
     all_candidates = get_all_agents()
     all_candidate_ids = [c.id for c in all_candidates]
     all_test_cases = get_all_test_cases()
     candidates = len(all_candidates)
     genesis = get_genesis()
     function_name = genesis.function_name
-
+ 
     for test in all_test_cases:
         test()
-    most_frequent = reduce_to_most_frequent_answer()
+
     test_dist = get_test_dist()
+    with open('test_dist.json', 'w') as f:
+        json.dump(test_dist, f, indent=2)
+
     test_inputs = list(test_dist.keys())
     candidate_to_scores = calculate_candidates_scores(all_candidate_ids)
     ranked_candidate = sorted(
         [(s, c) for c, s in candidate_to_scores.items() if find_agent(c)], reverse=True)
-    for input, d in test_dist.items():
+    for input, dist_with_output in test_dist.items():
+        most_frequent_output = dist_with_output[0][1]
+        dist = [x[0] for x in dist_with_output]
         print(
-            f'=== {shorten_answer(input)} -> {most_frequent.get(input, "not_found")}, entropy: {entropy_list(d):.2f}, dist: {shorten_list(d)}')
+            f'=== {shorten_answer(input)} -> {most_frequent_output}, entropy: {entropy_list(dist):.2f}, dist: {shorten_list(dist)}')
     print_candidate_rank(ranked_candidate)
 
     logging.info(f'Total candidates: {candidates}')
     logging.info(f'Total test cases: {len(test_inputs)}')
+
+
+    return False
 
     # Seed
     if round_info.round < 10:

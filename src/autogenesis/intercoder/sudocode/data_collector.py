@@ -112,8 +112,8 @@ def calculate_candidates_scores(all_candidates: List[str] = []) -> Dict[str, int
 def get_test_dist() -> Dict[Tuple, Any]:
     test_dist = dict()
     for input, output_dist in DATA_DIST.items():
-        dist = sorted([len(points)
-                      for _, points in output_dist.items()], reverse=True)
+        dist = sorted([(len(points), output)
+                      for output, points in output_dist.items()], reverse=True, key=lambda x: x[0])
         test_dist[input] = dist
     return test_dist
 
