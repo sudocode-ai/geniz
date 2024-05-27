@@ -80,7 +80,7 @@ class CodeAgentState(BaseModel, PersistStateToFile):
         clean_source_code = clean_source_code.replace(
             '@sudocode.DebugAgent', '')
         return clean_source_code
-    
+
     @property
     def module_name(self) -> str:
         return self.source_filename.removesuffix('.py')
@@ -139,7 +139,7 @@ final_answer = {self.function_name}
         output_filename = f'candidate_{new_id}.py'
         replys, histories = query_llm(
             message, system_message=system_message, previous_history=previous_history, filename=output_filename)
-        
+
         wrote_filenames = []
         for i, reply in enumerate(replys):
             candidate = PythonCode.extract_main_program_code_block_from_full_reply(
@@ -266,19 +266,34 @@ def print_candidate_rank(ranked_candidate):
         print(f'{score:8}: {candidate_id:50} - {oracle_pass}')
 
 
-def run_all_code_agents() -> bool:
-    round_info = get_round_info()
-    if os.path.exists(_OUTPUT):
-        logging.info(f'Day {round_info.round}: already have {_OUTPUT}')
-        return True
-    
+def code_gen():
     all_candidates = get_all_agents()
     all_candidate_ids = [c.id for c in all_candidates]
     all_test_cases = get_all_test_cases()
     candidates = len(all_candidates)
     genesis = get_genesis()
     function_name = genesis.function_name
- 
+
+    for test in all_test_cases:
+        test()
+    test_dist = get_test_dist()
+    with open('test_dist.json', 'w') as f:
+        json.dump(test_dist, f, indent=2)
+
+
+def run_all_code_agents() -> bool:
+    round_info = get_round_info()
+    if os.path.exists(_OUTPUT):
+        logging.info(f'Day {round_info.round}: already have {_OUTPUT}')
+        return True
+
+    all_candidates = get_all_agents()
+    all_candidate_ids = [c.id for c in all_candidates]
+    all_test_cases = get_all_test_cases()
+    candidates = len(all_candidates)
+    genesis = get_genesis()
+    function_name = genesis.function_name
+
     for test in all_test_cases:
         test()
 
@@ -299,7 +314,6 @@ def run_all_code_agents() -> bool:
 
     logging.info(f'Total candidates: {candidates}')
     logging.info(f'Total test cases: {len(test_inputs)}')
-
 
     return False
 
@@ -384,7 +398,8 @@ def run_all_code_agents() -> bool:
             execution_result = '\n'.join(call_strs)
             print(
                 f'=== Exercising {candidate_id}:\n{execution_result}')
-            born_new = agent.generate_candidate_by_execution_result(execution_result)
+            born_new = agent.generate_candidate_by_execution_result(
+                execution_result)
             if born_new:
                 agent.delete()
                 quota -= 1

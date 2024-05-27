@@ -4,6 +4,7 @@ import os
 import gradio as gr
 import ray
 from sudocode import auto_import, get_round_info, run_all_code_agents
+from sudocode.coder import code_gen
 from sudocode.round_info import get_round_info
 
 logging.basicConfig(
@@ -12,6 +13,8 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 
 os.environ['RAY_IGNORE_UNHANDLED_ERRORS'] = '1'
+
+auto_import()
 
 
 value = '''
@@ -34,10 +37,12 @@ if __name__ == '__main__':
 
 
 def gen_code():
-    pass
+    code_gen()
+
 
 def gen_test():
     pass
+
 
 def fake_gen():
     with open('candidate_dfSAs_0.py', 'r') as f:
@@ -49,14 +54,16 @@ with gr.Blocks() as demo:
     with gr.Row():
         gen_code_button = gr.Button("Generate Code", scale=0)
         gen_test_button = gr.Button("Generate Test", scale=0)
-        gen_code_button.click(gen_code)
-        gen_test_button.click(gen_test)
-    code_editor = gr.Code(
-        value=value,
-        language='python',
-        label="Generated images",
-        show_label=False,
-        elem_id="code_editor")
+    with gr.Row():
+        code_editor = gr.Code(
+            value=value,
+            language='python',
+            label="Generated images",
+            show_label=False,
+            elem_id="code_editor")
+
+    gen_code_button.click(gen_code)
+    gen_test_button.click(gen_test)
 
 if __name__ == "__main__":
     demo.launch()
