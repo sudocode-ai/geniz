@@ -1,0 +1,148 @@
+{
+  "('',)": [
+    [
+      3,
+      ""
+    ]
+  ],
+  "('cat',)": [
+    [
+      1,
+      "catc"
+    ],
+    [
+      1,
+      "cta"
+    ],
+    [
+      1,
+      "catac"
+    ]
+  ],
+  "('ai',)": [
+    [
+      1,
+      "aia"
+    ],
+    [
+      1,
+      "ai"
+    ],
+    [
+      1,
+      "Exception(ZeroDivisionError: integer division or modulo by zero)"
+    ]
+  ],
+  "('Hello',)": [
+    [
+      1,
+      "HelloH"
+    ],
+    [
+      1,
+      "Holle"
+    ],
+    [
+      1,
+      "HellolleH"
+    ]
+  ],
+  "('A!',)": [
+    [
+      1,
+      "A!A"
+    ],
+    [
+      1,
+      "A!"
+    ],
+    [
+      1,
+      "Exception(ZeroDivisionError: integer division or modulo by zero)"
+    ]
+  ],
+  "('1#!',)": [
+    [
+      1,
+      "1#!1"
+    ],
+    [
+      1,
+      "1!#"
+    ],
+    [
+      1,
+      "1#!#1"
+    ]
+  ],
+  "('hello world!',)": [
+    [
+      1,
+      "hello world!h"
+    ],
+    [
+      1,
+      "h!dlrow olle"
+    ],
+    [
+      1,
+      "hello world!dlrow olleh"
+    ]
+  ],
+  "('a',)": [
+    [
+      1,
+      "aa"
+    ],
+    [
+      1,
+      "a"
+    ],
+    [
+      1,
+      "Exception(ZeroDivisionError: integer division or modulo by zero)"
+    ]
+  ],
+  "('aba',)": [
+    [
+      1,
+      "abaaba"
+    ],
+    [
+      1,
+      "aba"
+    ],
+    [
+      1,
+      "ababa"
+    ]
+  ],
+  "('evhvmpq6l22sosjylrp3l1g646r3ta147mjk3jipg2ak5oqk2d',)": [
+    [
+      1,
+      "evhvmpq6l22sosjylrp3l1g646r3ta147mjk3jipg2ak5oqk2de"
+    ],
+    [
+      1,
+      "ed2kqo5ka2gpij3kjm741at3r646g1l3prlyjsos22l6qpmvhv"
+    ],
+    [
+      1,
+      "evhvmpq6l22sosjylrp3l1g646r3ta147mjk3jipg2ak5oqk2d2kqo5ka2gpij3kjm741at3r646g1l3prlyjsos22l6qpmvhve"
+    ]
+  ],
+  "('3zseczsqz79xzh90gn6fiwmuztonjqru0bdvwcmyisu9koq3vq',)": [
+    [
+      1,
+      "3zseczsqz79xzh90gn6fiwmuztonjqru0bdvwcmyisu9koq3vq3"
+    ],
+    [
+      1,
+      "3qv3qok9usiymcwvdb0urqjnotzumwif6ng09hzx97zqszcesz"
+    ],
+    [
+      1,
+      "3zseczsqz79xzh90gn6fiwmuztonjqru0bdvwcmyisu9koq3vqv3qok9usiymcwvdb0urqjnotzumwif6ng09hzx97zqszcesz3"
+    ]
+  ]
+}
