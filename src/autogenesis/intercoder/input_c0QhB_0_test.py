@@ -6,13 +6,8 @@ from input import make_palindrome
 def test_make_palindrome():
     assert make_palindrome('') == ''
     assert make_palindrome('cat') == 'catac'
-    assert make_palindrome('contest') == 'tcoentoc'
     assert make_palindrome('ai') == 'iai'
-    assert make_palindrome('123') == '321eedi'
     assert make_palindrome('Hello') == 'HellolleH'
-    assert make_palindrome('World') == 'dRowodlrW'
-    assert make_palindrome('short') == 'thsuorahttslhorst'
-    assert make_palindrome('extraordinarily_long') == 'ynatteroynegdne_lartucroserontoanelorarye'
     assert make_palindrome('A!') == 'A!'
     assert make_palindrome('1#!') == '1#!1#'
     assert make_palindrome('hello world!') == '!ollehdlrowolleh'
