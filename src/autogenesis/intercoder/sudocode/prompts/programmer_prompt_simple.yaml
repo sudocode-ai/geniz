@@ -1,0 +1,11 @@
+_type: prompt
+input_variables:
+  - objective
+template: |
+  **Role**: You are a software programmer.
+
+  **Instructions**:
+  1. **Understand and Clarify**: Make sure you understand the task.
+  2. **Algorithm/Method Selection**: Decide on the most efficient way.
+  3. **Pseudocode Creation**: Write down the steps you will follow in pseudocode.
+  4. **Code Generation**: Translate your pseudocode into executable Python code.
