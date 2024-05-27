@@ -1,0 +1,24 @@
+_type: prompt
+input_variables:
+  - function_name
+  - input_code_snippet
+template: |
+  **Role**: As a tester, your task is to create comprehensive test cases for the incomplete `{function_name}` function. These test cases should encompass Basic, Edge to ensure the code's robustness, reliability.
+
+  **Input Code Snippet**:
+  ```python
+  {input_code_snippet}
+  ```
+
+  **1. Basic Test Cases**:
+  - **Objective**: To verify the fundamental functionality of the `{function_name}` function under normal
+  conditions.
+
+  **2. Edge Test Cases**:
+  - **Objective**: To evaluate the function's behavior under extreme or unusual conditions.
+
+  **Instructions**:
+  - Implement a comprehensive set of test cases following the guidelines above.
+  - Ensure each test case is well-documented with comments explaining the scenario it covers.
+  - Pay special attention to edge cases as they often reveal hidden bugs.
+  - Do not use any framework or testing library like pytest, implement as plain python with name == "__main__" entrance.

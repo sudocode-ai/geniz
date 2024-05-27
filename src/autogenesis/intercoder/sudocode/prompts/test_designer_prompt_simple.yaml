@@ -1,0 +1,16 @@
+_type: prompt
+input_variables:
+  - function_name
+  - input_code_snippet
+template: |
+  **Role**: As a tester, your task is to create comprehensive test cases for the incomplete `{function_name}` function. These test cases should encompass Basic, Edge to ensure the code's robustness, reliability.
+
+  **Input Code Snippet**:
+  ```python
+  {input_code_snippet}
+  ```
+
+  **Instructions**:
+  - The test case must be as short as possible. 
+  - Do not use `pytest` or `unittest` frameworks.
+  - Implement as plain python functions.
