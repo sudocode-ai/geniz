@@ -14,7 +14,20 @@ logging.basicConfig(
 
 os.environ['RAY_IGNORE_UNHANDLED_ERRORS'] = '1'
 
-auto_import()
+
+def gen_code():
+    auto_import()
+    code_gen()
+
+
+def gen_test():
+    pass
+
+
+def fake_gen():
+    with open('candidate_dfSAs_0.py', 'r') as f:
+        code_file = f.read()
+    return code_file
 
 
 value = '''
@@ -36,18 +49,14 @@ if __name__ == '__main__':
 '''
 
 
-def gen_code():
-    code_gen()
+def get_code_editor_input():
+    global value
+    value = '# 1\n' + value
+    return value
 
 
-def gen_test():
-    pass
-
-
-def fake_gen():
-    with open('candidate_dfSAs_0.py', 'r') as f:
-        code_file = f.read()
-    return code_file
+def code_editor_change(input):
+    print(input)
 
 
 with gr.Blocks() as demo:
@@ -56,14 +65,18 @@ with gr.Blocks() as demo:
         gen_test_button = gr.Button("Generate Test", scale=0)
     with gr.Row():
         code_editor = gr.Code(
-            value=value,
+            value=get_code_editor_input,
+            every=1,
             language='python',
-            label="Generated images",
+            label="Code Editor",
+            interactive=True,
             show_label=False,
             elem_id="code_editor")
+        test_editor = gr.JSON()
 
     gen_code_button.click(gen_code)
     gen_test_button.click(gen_test)
+    code_editor.change(code_editor_change)
 
 if __name__ == "__main__":
     demo.launch()
