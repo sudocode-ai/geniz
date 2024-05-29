@@ -24,6 +24,15 @@ class DataPoint(BaseModel):
         return msg
 
 
+def datapoint_to_input_output_str(datapoint):
+    input_str = str(datapoint.input)
+    if isinstance(datapoint.output, Exception):
+        e = datapoint.output
+        output_str = f'Exception({type(e).__name__}: {e})'
+    else:
+        output_str = str(datapoint.output)
+    return input_str, output_str
+
 class DataCollector(BaseModel):
     test_case: str
     data_points: List[DataPoint] = []
@@ -39,12 +48,7 @@ class DataCollector(BaseModel):
     def merge(self):
         for datapoint in self.data_points:
             try:
-                input_str = str(datapoint.input)
-                if isinstance(datapoint.output, Exception):
-                    e = datapoint.output
-                    output_str = f'Exception({type(e).__name__}: {e})'
-                else:
-                    output_str = str(datapoint.output)
+                input_str, output_str = datapoint_to_input_output_str(datapoint)
                 DATA_DIST[input_str][output_str][datapoint.candidate].append(
                     datapoint)
             except:

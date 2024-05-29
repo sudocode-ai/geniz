@@ -16,8 +16,8 @@ from pydantic import BaseModel
 from .auto_import import auto_import
 from .data_collector import (DataPoint, calculate_candidates_scores,
                              get_candidate_input_output, get_data_collector,
-                             get_test_dist, is_data_collection_mode,
-                             reduce_to_most_frequent_answer)
+                             get_test_dist, is_data_collection_mode, get_data_dist,
+                             reduce_to_most_frequent_answer, datapoint_to_input_output_str)
 from .debugger import get_all_test_cases
 from .llm import ChatMessage, query_llm
 from .python_code import PythonCode
@@ -26,6 +26,9 @@ from .test_designer import create_test_file
 from .util import (PersistStateToFile, alphanumeric_uuid, entropy_list,
                    load_prompt, make_function_call_statement_str,
                    shorten_answer, shorten_list)
+from .data_collector import DATA_DIST
+
+
 
 _INPUT = 'input.py'
 _OUTPUT = 'output.py'
@@ -264,36 +267,67 @@ def print_candidate_rank(ranked_candidate):
         print(f'{score:8}: {candidate_id:50} - {oracle_pass}')
 
 
-def generate_code():
+
+def refresh_all_data():
+    DATA_DIST.clear()
     auto_import()
+    all_test_cases = get_all_test_cases()
+    for test in all_test_cases:
+        test()
+
+
+def generate_code():
+    refresh_all_data()
     genesis = get_genesis()
     genesis.generate_seed_candidate()
-    auto_import()
+    refresh_all_data()
 
 
 def generate_test():
-    auto_import()
+    refresh_all_data()
     genesis = get_genesis()
     genesis.generate_test_case()
-    auto_import()
+    refresh_all_data()
     all_test_cases = get_all_test_cases()
     for test in all_test_cases:
         test()
 
 
-def code_gen():
-    all_candidates = get_all_agents()
-    all_candidate_ids = [c.id for c in all_candidates]
-    all_test_cases = get_all_test_cases()
-    candidates = len(all_candidates)
+def get_test_info():
+    refresh_all_data()
     genesis = get_genesis()
     function_name = genesis.function_name
 
-    for test in all_test_cases:
-        test()
+    results = []
+    candidate_to_input_output = get_candidate_input_output()
     test_dist = get_test_dist()
-    with open('test_dist.json', 'w') as f:
-        json.dump(test_dist, f, indent=2)
+    for input, dist_with_output in test_dist.items():
+        dist = [x[0] for x in dist_with_output]
+        outputs = [x[1] for x in dist_with_output]
+        most_frequent_output = outputs[0]
+        print(
+            f'=== {shorten_answer(input)} -> {most_frequent_output}, entropy: {entropy_list(dist):.2f}, dist: {shorten_list(dist)}')
+        
+        select_datapoint = None
+        for _, input_to_datapoint_dict in candidate_to_input_output.items():
+            for _, datapoint in input_to_datapoint_dict.items():
+                try:
+                    input_str, output_str = datapoint_to_input_output_str(datapoint)
+                except:
+                    continue
+                if input_str == input and output_str == most_frequent_output:
+                    select_datapoint = datapoint
+
+        if select_datapoint is None:
+            continue
+        
+        call_str = make_function_call_statement_str(select_datapoint.input, select_datapoint.output, function_name, limit=1000)
+        results.append({
+            'input': input,
+            'outputs': outputs,
+            'call_str': call_str
+        })
+    return results
 
 
 def run_all_code_agents() -> bool:
