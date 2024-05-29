@@ -13,6 +13,7 @@ import isort
 import ray
 from pydantic import BaseModel
 
+from .auto_import import auto_import
 from .data_collector import (DataPoint, calculate_candidates_scores,
                              get_candidate_input_output, get_data_collector,
                              get_test_dist, is_data_collection_mode,
@@ -29,7 +30,7 @@ from .util import (PersistStateToFile, alphanumeric_uuid, entropy_list,
 _INPUT = 'input.py'
 _OUTPUT = 'output.py'
 
-_REGISTRY = []
+_REGISTRY = dict()
 
 PROGRAMMER_PROMPT = load_prompt(
     os.path.join(
@@ -194,18 +195,15 @@ If you found the function {self.function_name} is not correct, re-generate it.
 
 
 def get_all_agents() -> List[CodeAgentState]:
-    return [agent for agent in _REGISTRY if not agent.is_genesis()]
+    return [agent for agent in _REGISTRY.values() if not agent.is_genesis()]
 
 
 def get_genesis() -> CodeAgentState:
-    return [agent for agent in _REGISTRY if agent.is_genesis()][0]
+    return [agent for agent in _REGISTRY.values() if agent.is_genesis()][0]
 
 
 def find_agent(candidate_id: str) -> Optional[CodeAgentState]:
-    results = [agent for agent in _REGISTRY if agent.id == candidate_id]
-    if len(results) != 1:
-        return None
-    return results[0]
+    return _REGISTRY.get(candidate_id, None)
 
 
 def CodeAgent(method=None, **kwargs):
@@ -214,7 +212,7 @@ def CodeAgent(method=None, **kwargs):
         source_filename = os.path.basename(method.__code__.co_filename)
         code_agent_state = CodeAgentState(
             function_obj=method, source_code=source_code, source_filename=source_filename, function_name=method.__name__)
-        _REGISTRY.append(code_agent_state)
+        _REGISTRY[code_agent_state.id] = code_agent_state
 
         @functools.wraps(method)
         def _wrapper(*args, **kwargs):
@@ -264,6 +262,23 @@ def print_candidate_rank(ranked_candidate):
         else:
             oracle_pass = 'N/A'
         print(f'{score:8}: {candidate_id:50} - {oracle_pass}')
+
+
+def generate_code():
+    auto_import()
+    genesis = get_genesis()
+    genesis.generate_seed_candidate()
+    auto_import()
+
+
+def generate_test():
+    auto_import()
+    genesis = get_genesis()
+    genesis.generate_test_case()
+    auto_import()
+    all_test_cases = get_all_test_cases()
+    for test in all_test_cases:
+        test()
 
 
 def code_gen():
