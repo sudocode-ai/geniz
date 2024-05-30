@@ -333,7 +333,11 @@ def get_test_and_candidate_info():
     candidate_to_scores = calculate_candidates_scores(all_candidate_ids)
     ranked_candidate = sorted(
         [(s, c) for c, s in candidate_to_scores.items() if find_agent(c)], reverse=True)
-    return test_info, all_candidates
+    candidate_info = [{
+            'candidate': find_agent(c),
+            'score': s,
+        } for s, c in ranked_candidate]
+    return test_info, candidate_info
 
 
 def run_all_code_agents() -> bool:
