@@ -1,11 +1,13 @@
-import json
+import copy
 import logging
 import os
+from functools import partial
 
 import gradio as gr
 import ray
 from sudocode.coder import (generate_code, generate_test,
-                            get_test_and_candidate_info, refresh_all_data)
+                            get_test_and_candidate_info, load_locked_tests,
+                            save_locked_tests)
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -87,8 +89,6 @@ with gr.Blocks(css=_CSS) as demo:
         with gr.Column():
             @gr.render(inputs=[test_info_state])
             def render_test_data(input_0):
-                # with open('test_dist.json', 'r') as f:
-                #     input_0 = json.load(f)
                 if input_0 is None:
                     print('input_0 is None')
                     return
@@ -96,7 +96,7 @@ with gr.Blocks(css=_CSS) as demo:
                     with gr.Group():
                         with gr.Row():
                             test_box = gr.Textbox(
-                                info['call_str'], show_label=False, interactive=True)
+                                info['default_call_str'], show_label=False, interactive=True)
                         with gr.Row():
                             output_options = info['outputs']
                             output_radio_group = gr.Radio(
@@ -104,22 +104,32 @@ with gr.Blocks(css=_CSS) as demo:
                                 value=output_options[0],
                                 container=False,
                                 interactive=True,
-                                label='Output')
+                                label='Output Set')
                         lock_checkbox = gr.Checkbox(label='Lock')
 
-                        def output_radio_group_trigger(input_0):
-                            this_info = info
-                            print(
-                                f'output_radio_group_trigger: {input_0}, {this_info}')
-                        output_radio_group.change(
-                            output_radio_group_trigger, inputs=[output_radio_group])
+                        def output_radio_group_trigger(this_info, input_0):
+                            # TODO: color change for candidate boxes
+                            output_info = this_info['outputs_info'].get(
+                                input_0, None)
+                            if output_info is None or len(output_info) == 0:
+                                return this_info['default_call_str']
+                            return output_info[0]['call_str']
 
-                        def lock_checkbox_trigger(input_0):
-                            this_info = info
-                            print(
-                                f'lock_check_trigger: {input_0}, {this_info}')
+                        output_radio_group.change(
+                            partial(output_radio_group_trigger, copy.copy(info)), inputs=[output_radio_group], outputs=[test_box])
+
+                        def lock_checkbox_trigger(this_info, input_0, input_1):
+                            this_info = copy.deepcopy(info)
+                            locked_tests = load_locked_tests()
+                            if input_0 is True:
+                                locked_tests[this_info['input']] = input_1
+                            else:
+                                locked_tests.pop(this_info['input'], None)
+                            save_locked_tests(locked_tests)
+                            return candidate_info
+
                         lock_checkbox.change(
-                            lock_checkbox_trigger, inputs=[lock_checkbox])
+                            partial(lock_checkbox_trigger, copy.copy(info)), inputs=[lock_checkbox, output_radio_group], outputs=[candidate_info_state])
 
     gen_code_button.click(click_gen_code, inputs=[], outputs=[
                           candidate_info_state, test_info_state])

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import functools
 import inspect
 import json
@@ -267,6 +268,17 @@ def print_candidate_rank(ranked_candidate):
         print(f'{score:8}: {candidate_id:50} - {oracle_pass}')
 
 
+def load_locked_tests():
+    if not os.path.exists('locked_tests.json'):
+        return {}
+    with open('locked_tests.json', 'r') as f:
+        return json.load(f)
+
+
+def save_locked_tests(locked_tests):
+    with open('locked_tests.json', 'w') as f:
+        json.dump(locked_tests, f, indent=2)
+
 
 def refresh_all_data():
     DATA_DIST.clear()
@@ -277,14 +289,13 @@ def refresh_all_data():
 
 
 def generate_code():
-    refresh_all_data()
+    auto_import()
     genesis = get_genesis()
     genesis.generate_seed_candidate()
-    refresh_all_data()
 
 
 def generate_test():
-    refresh_all_data()
+    auto_import()
     genesis = get_genesis()
     genesis.generate_test_case()
     refresh_all_data()
@@ -308,24 +319,29 @@ def get_test_and_candidate_info():
         print(
             f'=== {shorten_answer(input)} -> {most_frequent_output}, entropy: {entropy_list(dist):.2f}, dist: {shorten_list(dist)}')
         
-        select_datapoint = None
-        for _, input_to_datapoint_dict in candidate_to_input_output.items():
+        outputs_info = defaultdict(list)
+        for candidate_id, input_to_datapoint_dict in candidate_to_input_output.items():
             for _, datapoint in input_to_datapoint_dict.items():
                 try:
                     input_str, output_str = datapoint_to_input_output_str(datapoint)
                 except:
                     continue
-                if input_str == input and output_str == most_frequent_output:
-                    select_datapoint = datapoint
+                if input_str != input:
+                    continue
+                
+                call_str = make_function_call_statement_str(datapoint.input, datapoint.output, function_name, limit=1000)
+                outputs_info[output_str].append({
+                    'datapoint': datapoint,
+                    'call_str': call_str,
+                    'candidate_id': candidate_id,
+                })
 
-        if select_datapoint is None:
-            continue
-        
-        call_str = make_function_call_statement_str(select_datapoint.input, select_datapoint.output, function_name, limit=1000)
         test_info.append({
             'input': input,
-            'outputs': outputs,
-            'call_str': call_str
+            'default_output_str': most_frequent_output,
+            'default_call_str': outputs_info[most_frequent_output][0]['call_str'],
+            'outputs': outputs,  # in rank order.
+            'outputs_info': outputs_info,
         })
 
     all_candidates = get_all_agents()
@@ -341,6 +357,8 @@ def get_test_and_candidate_info():
 
 
 def run_all_code_agents() -> bool:
+    return False
+
     round_info = get_round_info()
     if os.path.exists(_OUTPUT):
         logging.info(f'Day {round_info.round}: already have {_OUTPUT}')
@@ -373,8 +391,6 @@ def run_all_code_agents() -> bool:
 
     logging.info(f'Total candidates: {candidates}')
     logging.info(f'Total test cases: {len(test_inputs)}')
-
-    return False
 
     # Seed
     if round_info.round < 10:
