@@ -38,9 +38,6 @@ with gr.Blocks(css=_CSS) as demo:
 
     def click_run_all_tests():
         test_info, candidate_info = get_test_and_candidate_info()
-        import random
-        random.shuffle(candidate_info)
-        random.shuffle(test_info)
         return {
             candidate_info_state: candidate_info,
             test_info_state: test_info,
@@ -78,8 +75,10 @@ with gr.Blocks(css=_CSS) as demo:
         with gr.Column():
             @gr.render(inputs=[candidate_info_state])
             def render_candidate_data(input_0):
-                for i, candidate in enumerate(input_0):
-                    with gr.Accordion(label=f'{candidate.id}', open=(i == 0)):
+                for i, candidate_info in enumerate(input_0):
+                    candidate = candidate_info['candidate']
+                    score = candidate_info['score']
+                    with gr.Accordion(label=f'{candidate.id}  [score: {score}]', open=(i == 0)):
                         code_editor = gr.Code(
                             value=candidate.clean_source_code,
                             language='python',
