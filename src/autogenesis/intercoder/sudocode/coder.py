@@ -293,12 +293,12 @@ def generate_test():
         test()
 
 
-def get_test_info():
+def get_test_and_candidate_info():
     refresh_all_data()
     genesis = get_genesis()
     function_name = genesis.function_name
 
-    results = []
+    test_info = []
     candidate_to_input_output = get_candidate_input_output()
     test_dist = get_test_dist()
     for input, dist_with_output in test_dist.items():
@@ -322,12 +322,18 @@ def get_test_info():
             continue
         
         call_str = make_function_call_statement_str(select_datapoint.input, select_datapoint.output, function_name, limit=1000)
-        results.append({
+        test_info.append({
             'input': input,
             'outputs': outputs,
             'call_str': call_str
         })
-    return results
+
+    all_candidates = get_all_agents()
+    all_candidate_ids = [c.id for c in all_candidates]
+    candidate_to_scores = calculate_candidates_scores(all_candidate_ids)
+    ranked_candidate = sorted(
+        [(s, c) for c, s in candidate_to_scores.items() if find_agent(c)], reverse=True)
+    return test_info, all_candidates
 
 
 def run_all_code_agents() -> bool:
