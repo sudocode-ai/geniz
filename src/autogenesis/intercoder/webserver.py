@@ -4,7 +4,8 @@ import os
 
 import gradio as gr
 import ray
-from sudocode.coder import generate_code, generate_test, refresh_all_data, get_test_info
+from sudocode.coder import (generate_code, generate_test,
+                            get_test_and_candidate_info, refresh_all_data)
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -14,48 +15,60 @@ logging.basicConfig(
 os.environ['RAY_IGNORE_UNHANDLED_ERRORS'] = '1'
 
 
-def gen_code():
-    generate_code()
+if gr.NO_RELOAD:
+    ray.init(include_dashboard=False, ignore_reinit_error=True)
 
 
-def gen_test():
-    generate_test()
-
-
-def select_candidate_file(filepath):
-    with open(filepath, 'r') as f:
-        code_file = f.read()
-    return code_file
-
-
-def get_prompt():
+def get_original_problem_prompt():
     with open('input.py', 'r') as f:
         code_file = f.read()
     return code_file
 
 
-test_info = get_test_info()
+test_info, candidate_info = get_test_and_candidate_info()
 
-with gr.Blocks() as demo:
+
+_CSS = '''
+.test_entry {background-color: red}
+'''
+
+with gr.Blocks(css=_CSS) as demo:
+    candidate_info_state = gr.State(candidate_info)
     test_info_state = gr.State(test_info)
 
     def click_run_all_tests():
-        print('click_run_all_tests')
-        test_info = get_test_info()
+        test_info, candidate_info = get_test_and_candidate_info()
         import random
+        random.shuffle(candidate_info)
         random.shuffle(test_info)
         return {
+            candidate_info_state: candidate_info,
             test_info_state: test_info,
         }
 
-    candidate_boxes = []
-    test_boxes = []
+    def click_gen_code():
+        generate_code()
+        test_info, candidate_info = get_test_and_candidate_info()
+        return {
+            candidate_info_state: candidate_info,
+            test_info_state: test_info,
+        }
+
+    def click_gen_test():
+        generate_test()
+        test_info, candidate_info = get_test_and_candidate_info()
+        return {
+            candidate_info_state: candidate_info,
+            test_info_state: test_info,
+        }
+
     with gr.Row():
         with gr.Accordion(label='Problem Description', open=False):
             prompt_editor = gr.Code(
-                value=get_prompt,
+                value=get_original_problem_prompt,
                 language='python',
                 show_label=False,
+                interactive=True,
             )
     with gr.Row():
         gen_code_button = gr.Button("Generate Code")
@@ -63,21 +76,17 @@ with gr.Blocks() as demo:
         run_all_tests_button = gr.Button("Run All Tests")
     with gr.Row(equal_height=True):
         with gr.Column():
-            file_explorer = gr.FileExplorer(
-                # every=2,
-                glob='**/*.py',
-                file_count='single',
-                height=200)
-            code_editor = gr.Code(
-                # every=1,
-                language='python',
-                label="Code Editor",
-                interactive=True,
-                show_label=False,
-                elem_id="code_editor",
-                scale=3)
+            @gr.render(inputs=[candidate_info_state])
+            def render_candidate_data(input_0):
+                for i, candidate in enumerate(input_0):
+                    with gr.Accordion(label=f'{candidate.id}', open=(i == 0)):
+                        code_editor = gr.Code(
+                            value=candidate.clean_source_code,
+                            language='python',
+                            interactive=True,
+                            show_label=False)
         with gr.Column():
-            @gr.render(inputs=[test_info_state], triggers=[run_all_tests_button.click, gen_code_button.click, gen_test_button.click])
+            @gr.render(inputs=[test_info_state])
             def render_test_data(input_0):
                 # with open('test_dist.json', 'r') as f:
                 #     input_0 = json.load(f)
@@ -89,7 +98,6 @@ with gr.Blocks() as demo:
                         with gr.Row():
                             test_box = gr.Textbox(
                                 info['call_str'], show_label=False, interactive=True)
-                            test_boxes.append(test_box)
                         with gr.Row():
                             output_options = info['outputs']
                             output_radio_group = gr.Radio(
@@ -100,15 +108,29 @@ with gr.Blocks() as demo:
                                 label='Output')
                         lock_checkbox = gr.Checkbox(label='Lock')
 
-    gen_code_button.click(gen_code)
-    gen_test_button.click(gen_test)
+                        def output_radio_group_trigger(input_0):
+                            this_info = info
+                            print(
+                                f'output_radio_group_trigger: {input_0}, {this_info}')
+                        output_radio_group.change(
+                            output_radio_group_trigger, inputs=[output_radio_group])
+
+                        def lock_checkbox_trigger(input_0):
+                            this_info = info
+                            print(
+                                f'lock_check_trigger: {input_0}, {this_info}')
+                        lock_checkbox.change(
+                            lock_checkbox_trigger, inputs=[lock_checkbox])
+
+    gen_code_button.click(click_gen_code, inputs=[], outputs=[
+                          candidate_info_state, test_info_state])
+    gen_test_button.click(click_gen_test, inputs=[], outputs=[
+                          candidate_info_state, test_info_state])
     run_all_tests_button.click(
-        click_run_all_tests, inputs=[], outputs=[test_info_state])
-    file_explorer.change(select_candidate_file, file_explorer, code_editor)
+        click_run_all_tests, inputs=[], outputs=[candidate_info_state, test_info_state])
     # code_editor.change(code_editor_change, code_editor, None)
     # gr.on(triggers=None, fn=click_run_all_tests, inputs=[], every=2)
     # dep = demo.load(click_run_all_tests, inputs=[], outputs=[test_info_state], every=2)
 
 if __name__ == "__main__":
-    ray.init(include_dashboard=False, ignore_reinit_error=True)
     demo.launch()
