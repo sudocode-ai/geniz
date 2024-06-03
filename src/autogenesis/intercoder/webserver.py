@@ -27,7 +27,7 @@ def get_original_problem_prompt():
     return code_file
 
 
-test_info, candidate_info = get_test_and_candidate_info()
+test_info, candidate_info, locked_tests = get_test_and_candidate_info()
 
 
 _CSS = '''
@@ -37,28 +37,32 @@ _CSS = '''
 with gr.Blocks(css=_CSS) as demo:
     candidate_info_state = gr.State(candidate_info)
     test_info_state = gr.State(test_info)
+    locked_tests_state = gr.State(locked_tests)
 
     def click_run_all_tests():
-        test_info, candidate_info = get_test_and_candidate_info()
+        test_info, candidate_info, locked_tests = get_test_and_candidate_info()
         return {
             candidate_info_state: candidate_info,
             test_info_state: test_info,
+            locked_tests_state: locked_tests,
         }
 
     def click_gen_code():
         generate_code()
-        test_info, candidate_info = get_test_and_candidate_info()
+        test_info, candidate_info, locked_tests = get_test_and_candidate_info()
         return {
             candidate_info_state: candidate_info,
             test_info_state: test_info,
+            locked_tests_state: locked_tests,
         }
 
     def click_gen_test():
         generate_test()
-        test_info, candidate_info = get_test_and_candidate_info()
+        test_info, candidate_info, locked_tests = get_test_and_candidate_info()
         return {
             candidate_info_state: candidate_info,
             test_info_state: test_info,
+            locked_tests_state: locked_tests,
         }
 
     with gr.Row():
@@ -69,6 +73,7 @@ with gr.Blocks(css=_CSS) as demo:
                 show_label=False,
                 interactive=True,
             )
+    gr.Markdown("---")
     with gr.Row():
         gen_code_button = gr.Button("Generate Code")
         gen_test_button = gr.Button("Generate Test")
@@ -93,50 +98,54 @@ with gr.Blocks(css=_CSS) as demo:
                     print('input_0 is None')
                     return
                 for info in input_0:
+                    default_output_str = info['default_output_str']
+                    default_call_str = info['default_call_str']
                     with gr.Group():
                         with gr.Row():
                             test_box = gr.Textbox(
-                                info['default_call_str'], show_label=False, interactive=True)
+                                default_call_str, show_label=False, interactive=True)
                         with gr.Row():
                             output_options = info['outputs']
                             output_radio_group = gr.Radio(
                                 choices=output_options,
-                                value=output_options[0],
+                                value=default_output_str,
                                 container=False,
                                 interactive=True,
-                                label='Output Set')
-                        lock_checkbox = gr.Checkbox(label='Lock')
+                                label='Output Values')
+                        lock_checkbox = gr.Checkbox(label='Lock', value=info['locked'])
 
-                        def output_radio_group_trigger(this_info, input_0):
+                        def output_radio_group_trigger(this_info, selected_output, locked_tests):
                             # TODO: color change for candidate boxes
                             output_info = this_info['outputs_info'].get(
-                                input_0, None)
+                                selected_output, None)
                             if output_info is None or len(output_info) == 0:
                                 return this_info['default_call_str']
-                            return output_info[0]['call_str']
+                            if this_info['input'] in locked_tests:
+                                if selected_output != locked_tests[this_info['input']]:
+                                    locked_tests[this_info['input']] = selected_output
+                                    save_locked_tests(locked_tests)
+                            return output_info[0]['call_str'], locked_tests
 
                         output_radio_group.change(
-                            partial(output_radio_group_trigger, copy.copy(info)), inputs=[output_radio_group], outputs=[test_box])
+                            partial(output_radio_group_trigger, copy.copy(info)), inputs=[output_radio_group, locked_tests_state], outputs=[test_box, locked_tests_state])
 
-                        def lock_checkbox_trigger(this_info, input_0, input_1):
-                            this_info = copy.deepcopy(info)
-                            locked_tests = load_locked_tests()
-                            if input_0 is True:
-                                locked_tests[this_info['input']] = input_1
+                        def lock_checkbox_trigger(this_info, true_or_false, selected_output, locked_tests):
+                            if true_or_false is True:
+                                locked_tests[this_info['input']] = selected_output
                             else:
                                 locked_tests.pop(this_info['input'], None)
                             save_locked_tests(locked_tests)
-                            return candidate_info
+                            return candidate_info, locked_tests
 
                         lock_checkbox.change(
-                            partial(lock_checkbox_trigger, copy.copy(info)), inputs=[lock_checkbox, output_radio_group], outputs=[candidate_info_state])
+                            partial(lock_checkbox_trigger, copy.copy(info)), inputs=[lock_checkbox, output_radio_group, locked_tests_state], outputs=[candidate_info_state, locked_tests_state])
 
     gen_code_button.click(click_gen_code, inputs=[], outputs=[
-                          candidate_info_state, test_info_state])
+                          candidate_info_state, test_info_state, locked_tests_state])
     gen_test_button.click(click_gen_test, inputs=[], outputs=[
-                          candidate_info_state, test_info_state])
+                          candidate_info_state, test_info_state, locked_tests_state])
     run_all_tests_button.click(
-        click_run_all_tests, inputs=[], outputs=[candidate_info_state, test_info_state])
+        click_run_all_tests, inputs=[], outputs=[candidate_info_state, test_info_state, locked_tests_state])
     # code_editor.change(code_editor_change, code_editor, None)
     # gr.on(triggers=None, fn=click_run_all_tests, inputs=[], every=2)
     # dep = demo.load(click_run_all_tests, inputs=[], outputs=[test_info_state], every=2)
