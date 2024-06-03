@@ -31,7 +31,10 @@ test_info, candidate_info, locked_tests = get_test_and_candidate_info()
 
 
 _CSS = '''
-.test_entry {background-color: red}
+.locked {
+    background-color: green;
+    border-color: green;
+}
 '''
 
 with gr.Blocks(css=_CSS) as demo:
@@ -100,7 +103,11 @@ with gr.Blocks(css=_CSS) as demo:
                 for info in input_0:
                     default_output_str = info['default_output_str']
                     default_call_str = info['default_call_str']
-                    with gr.Group():
+                    locked = info['locked']
+                    elem_classes = []
+                    if locked:
+                        elem_classes.append('locked')
+                    with gr.Group(elem_classes=elem_classes):
                         with gr.Row():
                             test_box = gr.Textbox(
                                 default_call_str, show_label=False, interactive=True)
@@ -112,7 +119,7 @@ with gr.Blocks(css=_CSS) as demo:
                                 container=False,
                                 interactive=True,
                                 label='Output Values')
-                        lock_checkbox = gr.Checkbox(label='Lock', value=info['locked'])
+                        lock_checkbox = gr.Checkbox(label='Lock', value=locked)
 
                         def output_radio_group_trigger(this_info, selected_output, locked_tests):
                             # TODO: color change for candidate boxes
