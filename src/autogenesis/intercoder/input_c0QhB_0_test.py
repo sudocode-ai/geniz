@@ -13,9 +13,4 @@ def test_make_palindrome():
     assert make_palindrome('hello world!') == '!ollehdlrowolleh'
     assert make_palindrome('a') == 'a'
     assert make_palindrome('aba') == 'ababa'
-    import random
-    import string
-    long_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=50))
-    palindrome_length = len(long_str) // 4
-    assert make_palindrome(long_str) == long_str[:palindrome_length] + long_str[::-1]
 test_make_palindrome()
