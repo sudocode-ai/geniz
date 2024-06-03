@@ -309,6 +309,8 @@ def get_test_and_candidate_info():
     genesis = get_genesis()
     function_name = genesis.function_name
 
+    locked_tests = load_locked_tests()
+
     test_info = []
     candidate_to_input_output = get_candidate_input_output()
     test_dist = get_test_dist()
@@ -336,12 +338,20 @@ def get_test_and_candidate_info():
                     'candidate_id': candidate_id,
                 })
 
+        default_output_str = most_frequent_output
+        locked_output = locked_tests.get(input, None)
+        locked = False
+        if (locked_output is not None) and (locked_output in outputs):
+            default_output_str = locked_output
+            locked = True
+
         test_info.append({
             'input': input,
-            'default_output_str': most_frequent_output,
-            'default_call_str': outputs_info[most_frequent_output][0]['call_str'],
+            'default_output_str': default_output_str,
+            'default_call_str': outputs_info[default_output_str][0]['call_str'],
             'outputs': outputs,  # in rank order.
             'outputs_info': outputs_info,
+            'locked': locked,
         })
 
     all_candidates = get_all_agents()
@@ -353,7 +363,9 @@ def get_test_and_candidate_info():
             'candidate': find_agent(c),
             'score': s,
         } for s, c in ranked_candidate]
-    return test_info, candidate_info
+    
+    test_info = sorted(test_info, key=lambda x:not x['locked'])
+    return test_info, candidate_info, locked_tests
 
 
 def run_all_code_agents() -> bool:
