@@ -32,7 +32,6 @@ test_info, candidate_info, locked_tests = get_test_and_candidate_info()
 
 _CSS = '''
 .locked {
-    background-color: green;
     border-color: green;
 }
 '''
@@ -104,10 +103,11 @@ with gr.Blocks(css=_CSS) as demo:
                     default_output_str = info['default_output_str']
                     default_call_str = info['default_call_str']
                     locked = info['locked']
+                    elem_id = info['id']
                     elem_classes = []
                     if locked:
                         elem_classes.append('locked')
-                    with gr.Group(elem_classes=elem_classes):
+                    with gr.Group(elem_id=elem_id, elem_classes=elem_classes):
                         with gr.Row():
                             test_box = gr.Textbox(
                                 default_call_str, show_label=False, interactive=True)
@@ -151,10 +151,12 @@ with gr.Blocks(css=_CSS) as demo:
                             inputs=[lock_checkbox, output_radio_group, locked_tests_state],
                             outputs=[candidate_info_state, locked_tests_state],
                             js='''(x, y, z) => {
-    console.log('11111111111');
-    console.log(x);
-    console.log(y);
-    console.log(z);
+    var element = document.getElementById("''' + str(elem_id) + '''");
+    if (x) {
+        element.classList.add("locked");
+    } else {
+        element.classList.remove("locked");
+    }
     return [x, y, z];
 }
 ''')
