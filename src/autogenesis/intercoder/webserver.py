@@ -126,7 +126,7 @@ with gr.Blocks(css=_CSS) as demo:
                             output_info = this_info['outputs_info'].get(
                                 selected_output, None)
                             if output_info is None or len(output_info) == 0:
-                                return this_info['default_call_str']
+                                return this_info['default_call_str'], locked_tests
                             if this_info['input'] in locked_tests:
                                 if selected_output != locked_tests[this_info['input']]:
                                     locked_tests[this_info['input']] = selected_output
@@ -134,7 +134,9 @@ with gr.Blocks(css=_CSS) as demo:
                             return output_info[0]['call_str'], locked_tests
 
                         output_radio_group.change(
-                            partial(output_radio_group_trigger, copy.copy(info)), inputs=[output_radio_group, locked_tests_state], outputs=[test_box, locked_tests_state])
+                            partial(output_radio_group_trigger, copy.copy(info)),
+                            inputs=[output_radio_group, locked_tests_state],
+                            outputs=[test_box, locked_tests_state])
 
                         def lock_checkbox_trigger(this_info, true_or_false, selected_output, locked_tests):
                             if true_or_false is True:
@@ -145,17 +147,27 @@ with gr.Blocks(css=_CSS) as demo:
                             return candidate_info, locked_tests
 
                         lock_checkbox.change(
-                            partial(lock_checkbox_trigger, copy.copy(info)), inputs=[lock_checkbox, output_radio_group, locked_tests_state], outputs=[candidate_info_state, locked_tests_state])
+                            partial(lock_checkbox_trigger, copy.copy(info)),
+                            inputs=[lock_checkbox, output_radio_group, locked_tests_state],
+                            outputs=[candidate_info_state, locked_tests_state],
+                            js='''(x, y, z) => {
+    console.log('11111111111');
+    console.log(x);
+    console.log(y);
+    console.log(z);
+    return [x, y, z];
+}
+''')
 
-    gen_code_button.click(click_gen_code, inputs=[], outputs=[
+    gen_code_button.click(click_gen_code, inputs=None, outputs=[
                           candidate_info_state, test_info_state, locked_tests_state])
-    gen_test_button.click(click_gen_test, inputs=[], outputs=[
+    gen_test_button.click(click_gen_test, inputs=None, outputs=[
                           candidate_info_state, test_info_state, locked_tests_state])
     run_all_tests_button.click(
-        click_run_all_tests, inputs=[], outputs=[candidate_info_state, test_info_state, locked_tests_state])
+        click_run_all_tests, inputs=None, outputs=[candidate_info_state, test_info_state, locked_tests_state])
     # code_editor.change(code_editor_change, code_editor, None)
     # gr.on(triggers=None, fn=click_run_all_tests, inputs=[], every=2)
     # dep = demo.load(click_run_all_tests, inputs=[], outputs=[test_info_state], every=2)
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(debug=True)
