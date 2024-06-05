@@ -15,7 +15,7 @@ import ray
 from pydantic import BaseModel
 
 from .auto_import import auto_import
-from .data_collector import (DataPoint, calculate_candidates_scores,
+from .data_collector import (DataPoint, calculate_candidates_stats_scores,
                              get_candidate_input_output, get_data_collector,
                              get_test_dist, is_data_collection_mode, get_data_dist,
                              reduce_to_most_frequent_answer, datapoint_to_input_output_str)
@@ -315,6 +315,7 @@ def get_test_and_candidate_info():
 
     locked_tests = load_locked_tests()
 
+    candidate_to_passed_locked_tests = defaultdict(list)
     test_info = []
     candidate_to_input_output = get_candidate_input_output()
     test_dist = get_test_dist()
@@ -349,8 +350,14 @@ def get_test_and_candidate_info():
             default_output_str = locked_output
             locked = True
 
+        this_test_id = alphanumeric_uuid()
+        if locked:
+            correct_info_list = outputs_info[default_output_str]
+            for info in correct_info_list:
+                candidate_to_passed_locked_tests[info['candidate_id']].append(this_test_id)
+
         test_info.append({
-            'id': alphanumeric_uuid(),
+            'id': this_test_id,
             'input': input,
             'default_output_str': default_output_str,
             'default_call_str': outputs_info[default_output_str][0]['call_str'],
@@ -361,13 +368,15 @@ def get_test_and_candidate_info():
 
     all_candidates = get_all_agents()
     all_candidate_ids = [c.id for c in all_candidates]
-    candidate_to_scores = calculate_candidates_scores(all_candidate_ids)
-    ranked_candidate = sorted(
-        [(s, c) for c, s in candidate_to_scores.items() if find_agent(c)], reverse=True)
+
+    candidate_to_stats_scores = calculate_candidates_stats_scores(all_candidate_ids)
     candidate_info = [{
-            'candidate': find_agent(c),
-            'score': s,
-        } for s, c in ranked_candidate]
+            'candidate_id': candidate_id,
+            'candidate': find_agent(candidate_id),
+            'stats_score': stats_score,
+            'locked_tests_score': len(candidate_to_passed_locked_tests[candidate_id]),
+            'passed_locked_tests': candidate_to_passed_locked_tests[candidate_id],
+        } for candidate_id, stats_score in candidate_to_stats_scores.items()]
     
     test_info = sorted(test_info, key=lambda x:not x['locked'])
     return test_info, candidate_info, locked_tests

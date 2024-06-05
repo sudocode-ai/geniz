@@ -31,7 +31,11 @@ test_info, candidate_info, locked_tests = get_test_and_candidate_info()
 
 
 _CSS = '''
-.locked {
+.test_case_container {
+    border-width: medium;
+}
+
+.test_case_locked {
     border-color: green;
 }
 '''
@@ -85,9 +89,11 @@ with gr.Blocks(css=_CSS) as demo:
             @gr.render(inputs=[candidate_info_state])
             def render_candidate_data(input_0):
                 for i, candidate_info in enumerate(input_0):
+                    candidate_id = candidate_info['candidate_id']
                     candidate = candidate_info['candidate']
-                    score = candidate_info['score']
-                    with gr.Accordion(label=f'{candidate.id}  [score: {score}]', open=(i == 0)):
+                    stats_score = candidate_info['stats_score']
+                    locked_tests_score = candidate_info['locked_tests_score']
+                    with gr.Accordion(label=f'{candidate_id}  [stats_score: {stats_score}, locked_score: {locked_tests_score}]', open=(i == 0), elem_id=candidate_id):
                         code_editor = gr.Code(
                             value=candidate.clean_source_code,
                             language='python',
@@ -104,9 +110,9 @@ with gr.Blocks(css=_CSS) as demo:
                     default_call_str = info['default_call_str']
                     locked = info['locked']
                     elem_id = info['id']
-                    elem_classes = []
+                    elem_classes = ['test_case_container']
                     if locked:
-                        elem_classes.append('locked')
+                        elem_classes.append('test_case_locked')
                     with gr.Group(elem_id=elem_id, elem_classes=elem_classes):
                         with gr.Row():
                             test_box = gr.Textbox(
@@ -153,9 +159,9 @@ with gr.Blocks(css=_CSS) as demo:
                             js='''(x, y, z) => {
     var element = document.getElementById("''' + str(elem_id) + '''");
     if (x) {
-        element.classList.add("locked");
+        element.classList.add("test_case_locked");
     } else {
-        element.classList.remove("locked");
+        element.classList.remove("test_case_locked");
     }
     return [x, y, z];
 }

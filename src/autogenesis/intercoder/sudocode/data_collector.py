@@ -93,7 +93,7 @@ def reduce_to_most_frequent_answer() -> Dict[Tuple, str]:
     return most_frequent
 
 
-def calculate_candidates_scores(all_candidates: List[str] = []) -> Dict[str, int]:
+def calculate_candidates_stats_scores(all_candidates: List[str] = []) -> Dict[str, int]:
     candidate_to_score = defaultdict(int)
     for c in all_candidates:
         candidate_to_score[c] = 0
