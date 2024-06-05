@@ -311,7 +311,7 @@ def get_test_and_candidate_info():
 
     locked_tests = load_locked_tests()
 
-    candidate_to_passed_locked_tests = defaultdict(list)
+    candidate_to_passed_locked_tests = defaultdict(set)
     test_info = []
     candidate_to_input_output = get_candidate_input_output()
     test_dist = get_test_dist()
@@ -350,7 +350,7 @@ def get_test_and_candidate_info():
         if locked:
             correct_info_list = outputs_info[default_output_str]
             for info in correct_info_list:
-                candidate_to_passed_locked_tests[info['candidate_id']].append(this_test_id)
+                candidate_to_passed_locked_tests[info['candidate_id']].add(this_test_id)
 
         test_info.append({
             'id': this_test_id,
