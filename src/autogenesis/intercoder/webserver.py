@@ -93,7 +93,8 @@ with gr.Blocks(css=_CSS) as demo:
                     candidate = candidate_info['candidate']
                     tests_score = candidate_info['tests_score']
                     stars = '⭐' * tests_score
-                    with gr.Accordion(label=f'{candidate_id} {stars}', open=(i == 0),
+                    with gr.Accordion(label=f'{candidate_id} {stars}',
+                                      open=False,
                                       elem_id=candidate_id):
                         code_editor = gr.Code(
                             value=candidate.clean_source_code,
@@ -154,26 +155,37 @@ with gr.Blocks(css=_CSS) as demo:
                             inputs=[output_radio_group, locked_tests_state],
                             outputs=[test_box, locked_tests_state])
 
-                        def lock_checkbox_trigger(this_info, true_or_false, selected_output, locked_tests):
+                        def lock_checkbox_trigger(this_info, true_or_false, selected_output, candidate_info, locked_tests):
                             if true_or_false is True:
-                                locked_tests[this_info['input']] = selected_output
+                                locked_tests[this_info['input']] = selected_output                            
+                                save_locked_tests(locked_tests)
+                                new_pass_candidates = [x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
+                                for info in candidate_info:
+                                    if info['candidate_id'] in new_pass_candidates:
+                                        info['passed_tests'].add(this_info['id'])
+                                        info['tests_score'] = len(info['passed_tests'])
                             else:
-                                locked_tests.pop(this_info['input'], None)
-                            save_locked_tests(locked_tests)
+                                locked_tests.pop(this_info['input'], None)                            
+                                save_locked_tests(locked_tests)
+                                pass_candidates_to_remove = [x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
+                                for info in candidate_info:
+                                    if info['candidate_id'] in pass_candidates_to_remove:
+                                        info['passed_tests'].remove(this_info['id'])
+                                        info['tests_score'] = len(info['passed_tests'])    
                             return candidate_info, locked_tests
 
                         lock_checkbox.change(
                             partial(lock_checkbox_trigger, copy.copy(info)),
-                            inputs=[lock_checkbox, output_radio_group, locked_tests_state],
+                            inputs=[lock_checkbox, output_radio_group, candidate_info_state, locked_tests_state],
                             outputs=[candidate_info_state, locked_tests_state],
-                            js='''(x, y, z) => {
+                            js='''(x, y, z, p) => {
     var element = document.getElementById("''' + str(elem_id) + '''");
     if (x) {
         element.classList.add("test_case_locked");
     } else {
         element.classList.remove("test_case_locked");
     }
-    return [x, y, z];
+    return [x, y, z, p];
 }
 ''')
 
