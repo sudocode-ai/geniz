@@ -304,6 +304,10 @@ def generate_test():
         test()
 
 
+def calculate_candidates_scores_based_on_test_info(all_candidates, test_info):
+    pass
+
+
 def get_test_and_candidate_info():
     refresh_all_data()
     genesis = get_genesis()
@@ -346,6 +350,7 @@ def get_test_and_candidate_info():
             locked = True
 
         test_info.append({
+            'id': alphanumeric_uuid(),
             'input': input,
             'default_output_str': default_output_str,
             'default_call_str': outputs_info[default_output_str][0]['call_str'],
@@ -366,130 +371,3 @@ def get_test_and_candidate_info():
     
     test_info = sorted(test_info, key=lambda x:not x['locked'])
     return test_info, candidate_info, locked_tests
-
-
-def run_all_code_agents() -> bool:
-    return False
-
-    round_info = get_round_info()
-    if os.path.exists(_OUTPUT):
-        logging.info(f'Day {round_info.round}: already have {_OUTPUT}')
-        return True
-
-    all_candidates = get_all_agents()
-    all_candidate_ids = [c.id for c in all_candidates]
-    all_test_cases = get_all_test_cases()
-    candidates = len(all_candidates)
-    genesis = get_genesis()
-    function_name = genesis.function_name
-
-    for test in all_test_cases:
-        test()
-
-    test_dist = get_test_dist()
-    with open('test_dist.json', 'w') as f:
-        json.dump(test_dist, f, indent=2)
-
-    test_inputs = list(test_dist.keys())
-    candidate_to_scores = calculate_candidates_scores(all_candidate_ids)
-    ranked_candidate = sorted(
-        [(s, c) for c, s in candidate_to_scores.items() if find_agent(c)], reverse=True)
-    for input, dist_with_output in test_dist.items():
-        most_frequent_output = dist_with_output[0][1]
-        dist = [x[0] for x in dist_with_output]
-        print(
-            f'=== {shorten_answer(input)} -> {most_frequent_output}, entropy: {entropy_list(dist):.2f}, dist: {shorten_list(dist)}')
-    print_candidate_rank(ranked_candidate)
-
-    logging.info(f'Total candidates: {candidates}')
-    logging.info(f'Total test cases: {len(test_inputs)}')
-
-    # Seed
-    if round_info.round < 10:
-        logging.info(
-            f'Day {round_info.round}: generate seed candidates and seed tests.')
-        if candidates < 10:
-            genesis.generate_seed_candidate()
-        if len(test_inputs) < 5:
-            genesis.generate_test_case()
-
-        if candidates >= 10 and len(test_inputs) >= 5:
-            round_info.round = 10
-            round_info.save()
-        return False
-
-    if round_info.round >= 20:
-        logging.info(
-            f'Day {round_info.round}: force to submit.')
-        if candidates > 0:
-            best_candidate = all_candidates[0]
-            logging.info(
-                f'Give up, submit random candidate: {best_candidate.debug_str()}')
-            best_candidate.submit()
-        else:
-            logging.info('Give up, no candidate to submit!')
-            genesis.submit()
-        return True
-
-    # Submit
-    if round_info.round >= 14:
-        logging.info(
-            f'Day {round_info.round}: rank and submit best candidate.')
-        if len(ranked_candidate) > 0:
-            best_candidate_id = ranked_candidate[0][1]
-            best_candidate = [
-                agent for agent in all_candidates if agent.id == best_candidate_id][0]
-            logging.info(
-                f'Submit the best candidate: {best_candidate.debug_str()}')
-            best_candidate.submit()
-            return True
-
-    # Feedback-fix-augment
-    if 10 <= round_info.round:
-        logging.info(
-            f'Day {round_info.round}: generate more test cases and feedback-fix-candidates')
-
-        if candidates < 10:
-            genesis.generate_seed_candidate()
-        if len(test_inputs) < 5:
-            genesis.generate_test_case()
-
-        candidate_input_output = get_candidate_input_output()
-        if not candidate_input_output:
-            return False
-
-        to_be_fixed_candidates = list(candidate_input_output.keys())
-        random.shuffle(to_be_fixed_candidates)
-        quota = 5
-        for candidate_id in to_be_fixed_candidates:
-            if quota <= 0:
-                break
-            input_output_dist = candidate_input_output[candidate_id]
-
-            agent = find_agent(candidate_id)
-            if agent is None or agent.is_genesis():
-                continue
-
-            call_strs = []
-            for input, datapoint in input_output_dist.items():
-                # Skip large test for now
-                if len(input) > 50:
-                    continue
-
-                call_str = make_function_call_statement_str(
-                    datapoint.input, datapoint.output, function_name, limit=100)
-                if not call_str:
-                    continue
-                call_strs.append(call_str)
-
-            execution_result = '\n'.join(call_strs)
-            print(
-                f'=== Exercising {candidate_id}:\n{execution_result}')
-            born_new = agent.generate_candidate_by_execution_result(
-                execution_result)
-            if born_new:
-                agent.delete()
-                quota -= 1
-
-        return False
-    return False
