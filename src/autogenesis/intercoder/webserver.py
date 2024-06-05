@@ -91,14 +91,24 @@ with gr.Blocks(css=_CSS) as demo:
                 for i, candidate_info in enumerate(input_0):
                     candidate_id = candidate_info['candidate_id']
                     candidate = candidate_info['candidate']
-                    stats_score = candidate_info['stats_score']
-                    locked_tests_score = candidate_info['locked_tests_score']
-                    with gr.Accordion(label=f'{candidate_id}  [stats_score: {stats_score}, locked_score: {locked_tests_score}]', open=(i == 0), elem_id=candidate_id):
+                    tests_score = candidate_info['tests_score']
+                    stars = '⭐' * tests_score
+                    with gr.Accordion(label=f'{candidate_id} {stars}', open=(i == 0),
+                                      elem_id=candidate_id):
                         code_editor = gr.Code(
                             value=candidate.clean_source_code,
                             language='python',
                             interactive=True,
                             show_label=False)
+                        with gr.Row():
+                            delete_button = gr.Button('Delete', scale=0)
+                            def click_delete_button(this_candidate_info, candidate_info):
+                                this_candidate_id = this_candidate_info['candidate_id']
+                                this_candidate = this_candidate_info['candidate']
+                                this_candidate.delete()
+                                return [c for c in candidate_info if c['candidate_id'] != this_candidate_id]
+                            delete_button.click(partial(click_delete_button, copy.copy(candidate_info)),
+                                                inputs=[candidate_info_state], outputs=[candidate_info_state])
         with gr.Column():
             @gr.render(inputs=[test_info_state])
             def render_test_data(input_0):

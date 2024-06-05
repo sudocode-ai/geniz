@@ -304,10 +304,6 @@ def generate_test():
         test()
 
 
-def calculate_candidates_scores_based_on_test_info(all_candidates, test_info):
-    pass
-
-
 def get_test_and_candidate_info():
     refresh_all_data()
     genesis = get_genesis()
@@ -374,9 +370,10 @@ def get_test_and_candidate_info():
             'candidate_id': candidate_id,
             'candidate': find_agent(candidate_id),
             'stats_score': stats_score,
-            'locked_tests_score': len(candidate_to_passed_locked_tests[candidate_id]),
-            'passed_locked_tests': candidate_to_passed_locked_tests[candidate_id],
+            'tests_score': len(candidate_to_passed_locked_tests[candidate_id]),
+            'passed_tests': candidate_to_passed_locked_tests[candidate_id],
         } for candidate_id, stats_score in candidate_to_stats_scores.items()]
     
-    test_info = sorted(test_info, key=lambda x:not x['locked'])
+    test_info = sorted(test_info, key=lambda x:x['locked'], reverse=True)
+    candidate_info = sorted(candidate_info, key=lambda x:(x['tests_score'], x['stats_score']), reverse=True)
     return test_info, candidate_info, locked_tests
