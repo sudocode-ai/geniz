@@ -5,10 +5,10 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-import sudocode
+import geniz
 
 
-@sudocode.CodeAgent()
+@geniz.CodeAgent()
 def make_palindrome(s: str) -> str:
     """
     Transforms a given string into the shortest palindrome beginning with it.
