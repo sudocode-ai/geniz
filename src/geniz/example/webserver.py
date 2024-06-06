@@ -6,8 +6,8 @@ from functools import partial
 import gradio as gr
 import ray
 from geniz.coder import (generate_code, generate_test,
-                            get_test_and_candidate_info, load_locked_tests,
-                            save_locked_tests)
+                         get_test_and_candidate_info,
+                         save_locked_tests)
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -72,13 +72,23 @@ with gr.Blocks(css=_CSS) as demo:
         }
 
     with gr.Row():
-        with gr.Accordion(label='Problem Description', open=False):
-            prompt_editor = gr.Code(
-                value=get_original_problem_prompt,
-                language='python',
-                show_label=False,
-                interactive=True,
-            )
+        with gr.Accordion(label='Problem Description and LLM settings', open=False):
+            with gr.Row(equal_height=True):
+                with gr.Column():
+                    prompt_editor = gr.Code(
+                        value=get_original_problem_prompt,
+                        language='python',
+                        show_label=False,
+                        interactive=True,
+                    )
+                with gr.Column():
+                    api_base_box = gr.Textbox(
+                        'https://geniz.ai/v1', label='API_BASE', interactive=True)
+                    api_key_box = gr.Textbox(
+                        'YOUR_KEY', label='API_KEY', type='password', interactive=True)
+                    model_box = gr.Textbox(
+                        'Phi-3-mini-128k-instruct-a100', label='MODEL', interactive=True)
+                    batch_inference_n = gr.Dropdown([1, 3, 5, 10], value=5, label='Batch Inference', interactive=True)
     gr.Markdown("---")
     with gr.Row():
         gen_code_button = gr.Button("Generate Code")
@@ -103,6 +113,7 @@ with gr.Blocks(css=_CSS) as demo:
                             show_label=False)
                         with gr.Row():
                             delete_button = gr.Button('Delete', scale=0)
+
                             def click_delete_button(this_candidate_info, candidate_info):
                                 this_candidate_id = this_candidate_info['candidate_id']
                                 this_candidate = this_candidate_info['candidate']
@@ -146,37 +157,47 @@ with gr.Blocks(css=_CSS) as demo:
                                 return this_info['default_call_str'], locked_tests
                             if this_info['input'] in locked_tests:
                                 if selected_output != locked_tests[this_info['input']]:
-                                    locked_tests[this_info['input']] = selected_output
+                                    locked_tests[this_info['input']
+                                                 ] = selected_output
                                     save_locked_tests(locked_tests)
                             return output_info[0]['call_str'], locked_tests
 
                         output_radio_group.change(
-                            partial(output_radio_group_trigger, copy.copy(info)),
+                            partial(output_radio_group_trigger,
+                                    copy.copy(info)),
                             inputs=[output_radio_group, locked_tests_state],
                             outputs=[test_box, locked_tests_state])
 
                         def lock_checkbox_trigger(this_info, true_or_false, selected_output, candidate_info, locked_tests):
                             if true_or_false is True:
-                                locked_tests[this_info['input']] = selected_output                            
+                                locked_tests[this_info['input']
+                                             ] = selected_output
                                 save_locked_tests(locked_tests)
-                                new_pass_candidates = [x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
+                                new_pass_candidates = [
+                                    x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
                                 for info in candidate_info:
                                     if info['candidate_id'] in new_pass_candidates:
-                                        info['passed_tests'].add(this_info['id'])
-                                        info['tests_score'] = len(info['passed_tests'])
+                                        info['passed_tests'].add(
+                                            this_info['id'])
+                                        info['tests_score'] = len(
+                                            info['passed_tests'])
                             else:
-                                locked_tests.pop(this_info['input'], None)                            
+                                locked_tests.pop(this_info['input'], None)
                                 save_locked_tests(locked_tests)
-                                pass_candidates_to_remove = [x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
+                                pass_candidates_to_remove = [
+                                    x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
                                 for info in candidate_info:
                                     if info['candidate_id'] in pass_candidates_to_remove:
-                                        info['passed_tests'].remove(this_info['id'])
-                                        info['tests_score'] = len(info['passed_tests'])    
+                                        info['passed_tests'].remove(
+                                            this_info['id'])
+                                        info['tests_score'] = len(
+                                            info['passed_tests'])
                             return candidate_info, locked_tests
 
                         lock_checkbox.change(
                             partial(lock_checkbox_trigger, copy.copy(info)),
-                            inputs=[lock_checkbox, output_radio_group, candidate_info_state, locked_tests_state],
+                            inputs=[lock_checkbox, output_radio_group,
+                                    candidate_info_state, locked_tests_state],
                             outputs=[candidate_info_state, locked_tests_state],
                             js='''(x, y, z, p) => {
     var element = document.getElementById("''' + str(elem_id) + '''");

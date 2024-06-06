@@ -129,5 +129,4 @@ dmypy.json
 .pyre/
 
 # Custom
-keys.py
 RoundInfo.json

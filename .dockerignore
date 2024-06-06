@@ -131,9 +131,6 @@ dmypy.json
 # Mac files
 *.DS_Store
 
-# Custom
-keys.py
-
 # iPython Notebooks
 *.ipynb
 
