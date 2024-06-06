@@ -76,13 +76,13 @@ class CodeAgentState(BaseModel, PersistStateToFile):
         """Without decorator."""
         clean_source_code = self.source_code
         clean_source_code = clean_source_code.replace(
-            '@sudocode.CodeAgent()', '')
+            '@geniz.CodeAgent()', '')
         clean_source_code = clean_source_code.replace(
-            '@sudocode.CodeAgent', '')
+            '@geniz.CodeAgent', '')
         clean_source_code = clean_source_code.replace(
-            '@sudocode.DebugAgent()', '')
+            '@geniz.DebugAgent()', '')
         clean_source_code = clean_source_code.replace(
-            '@sudocode.DebugAgent', '')
+            '@geniz.DebugAgent', '')
         return clean_source_code
 
     @property
@@ -156,7 +156,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-import sudocode
+import geniz
 
 {candidate.code_text}
 '''
@@ -297,10 +297,6 @@ def generate_test():
     auto_import()
     genesis = get_genesis()
     genesis.generate_test_case()
-    refresh_all_data()
-    all_test_cases = get_all_test_cases()
-    for test in all_test_cases:
-        test()
 
 
 def get_test_and_candidate_info():

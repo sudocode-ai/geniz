@@ -1,6 +1,0 @@
-
-import os
-
-MODEL = os.getenv('AUTOGENESIS_MODEL', 'Phi-3-mini-128k-instruct-a100')
-API_BASE = os.getenv('AUTOGENESIS_API_BASE', 'https://geniz.ai/v1')
-API_KEY = os.getenv('AUTOGENESIS_API_KEY', 'add_your_key_here')

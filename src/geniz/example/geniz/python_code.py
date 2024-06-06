@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 _CODE_AGENT_DECORATOR = ast.Call(
     func=ast.Attribute(
-        value=ast.Name(id='sudocode', ctx=ast.Load()),
+        value=ast.Name(id='geniz', ctx=ast.Load()),
         attr='CodeAgent',
         ctx=ast.Load()),
     args=[],
@@ -15,7 +15,7 @@ _CODE_AGENT_DECORATOR = ast.Call(
 
 _DEBUG_AGENT_DECORATOR = ast.Call(
     func=ast.Attribute(
-        value=ast.Name(id='sudocode', ctx=ast.Load()),
+        value=ast.Name(id='geniz', ctx=ast.Load()),
         attr='DebugAgent',
         ctx=ast.Load()),
     args=[],
@@ -24,7 +24,7 @@ _DEBUG_AGENT_DECORATOR = ast.Call(
 
 def maybe_add_decorators(tree: ast.Module, function_name: Optional[str] = None) -> bool:
     has_func_def = False
-    tree.body.insert(0, ast.Import(names=[ast.alias(name='sudocode')]))
+    tree.body.insert(0, ast.Import(names=[ast.alias(name='geniz')]))
     for statement in reversed(tree.body):
         if isinstance(statement, ast.FunctionDef):
             if statement.name.startswith('test_'):
