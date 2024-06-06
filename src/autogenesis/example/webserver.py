@@ -5,7 +5,7 @@ from functools import partial
 
 import gradio as gr
 import ray
-from sudocode.coder import (generate_code, generate_test,
+from geniz.coder import (generate_code, generate_test,
                             get_test_and_candidate_info, load_locked_tests,
                             save_locked_tests)
 

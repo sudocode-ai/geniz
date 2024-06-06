@@ -5,10 +5,10 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-import sudocode
+import geniz
 
 
-@sudocode.CodeAgent()
+@geniz.CodeAgent()
 def make_palindrome(s: str) -> str:
     """
     Finds the shortest palindrome that includes the input string. If the string is already a palindrome,

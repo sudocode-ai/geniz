@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-import sudocode
+import geniz
 
 
 def expand_around_center(s: str, left: int, right: int) -> str:
@@ -15,7 +15,7 @@ def expand_around_center(s: str, left: int, right: int) -> str:
         right += 1
     return s[left + 1:right]
 
-@sudocode.CodeAgent()
+@geniz.CodeAgent()
 def make_palindrome(s: str) -> str:
     """Find and return the shortest palindrome beginning with the given string."""
     if s == s[::-1]:

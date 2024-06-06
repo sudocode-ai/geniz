@@ -1,8 +1,8 @@
-import sudocode
+import geniz
 from input import make_palindrome
 
 
-@sudocode.DebugAgent()
+@geniz.DebugAgent()
 def test_make_palindrome():
     assert make_palindrome('') == ''
     print('Test with empty string passed.')
