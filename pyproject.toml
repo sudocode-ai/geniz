@@ -3,14 +3,14 @@
 # package, this name will be registered for you. It will determine how
 # users can install this project, e.g.:
 #
-# $ pip install autogenesis
+# $ pip install geniz
 #
 # And where it will live on PyPI: https://pypi.org/project/sampleproject/
 #
 # There are some restrictions on what makes a valid project name
 # specification here:
 # https://packaging.python.org/specifications/core-metadata/#name
-name = "autogenesis"  # Required
+name = "geniz"  # Required
 
 # Versions should comply with PEP 440:
 # https://www.python.org/dev/peps/pep-0440/
@@ -115,7 +115,7 @@ dependencies = [ # Optional
 # dependencies). Users will be able to install these using the "extras"
 # syntax, for example:
 #
-#   $ pip install autogenesis[dev]
+#   $ pip install geniz[dev]
 #
 # Similar to `dependencies` above, these must be valid existing
 # projects.
@@ -143,7 +143,7 @@ test = ["coverage"]
 # The following would provide a command line executable called `sample`
 # which executes the function `main` from this package when invoked.
 [project.scripts]  # Optional
-autogenesis = "autogenesis:main"
+geniz = "geniz:main"
 
 # This is configuration specific to the `setuptools` build backend.
 # If you are using a different build backend, you will need to change this.
