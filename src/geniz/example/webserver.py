@@ -72,23 +72,42 @@ with gr.Blocks(css=_CSS) as demo:
         }
 
     with gr.Row():
-        with gr.Accordion(label='Problem Description and LLM settings', open=False):
-            with gr.Row(equal_height=True):
-                with gr.Column():
-                    prompt_editor = gr.Code(
-                        value=get_original_problem_prompt,
-                        language='python',
-                        show_label=False,
-                        interactive=True,
-                    )
-                with gr.Column():
-                    api_base_box = gr.Textbox(
-                        'https://geniz.ai/v1', label='API_BASE', interactive=True)
-                    api_key_box = gr.Textbox(
-                        'YOUR_KEY', label='API_KEY', type='password', interactive=True)
-                    model_box = gr.Textbox(
-                        'Phi-3-mini-128k-instruct-a100', label='MODEL', interactive=True)
-                    batch_inference_n = gr.Dropdown([1, 3, 5, 10], value=5, label='Batch Inference', interactive=True)
+        with gr.Accordion(label='LLM settings', open=True):
+            with gr.Row():
+                api_base_box = gr.Textbox(
+                    os.getenv('API_BASE', 'https://geniz.ai/v1'), label='API_BASE', interactive=True)
+                api_key_box = gr.Textbox(
+                    os.getenv('API_KEY', ''), label='API_KEY', type='password', interactive=True)
+                model_box = gr.Textbox(
+                    os.getenv('MODEL', 'openai/Phi-3-mini-128k-instruct-a100'), label='MODEL', interactive=True)
+                batch_inference_n = gr.Dropdown([1, 3, 5, 10], value=3, label='Batch Inference', interactive=True)
+
+            def change_api_base(input):
+                os.environ['API_BASE'] = input
+            api_base_box.input(change_api_base, inputs=[api_base_box])
+
+            def change_api_key(input):
+                os.environ['API_KEY'] = input
+            api_key_box.input(change_api_key, inputs=[api_key_box])
+
+            def change_model(input):
+                os.environ['MODEL'] = input
+            model_box.input(change_model, inputs=[model_box])
+
+            def change_batch_inference(input):
+                os.environ['BATCH_INFERENCE_N'] = input
+            batch_inference_n.input(change_batch_inference, inputs=[batch_inference_n])
+
+    with gr.Row():
+        with gr.Accordion(label='Problem Description', open=True):
+            prompt_editor = gr.Code(
+                value=get_original_problem_prompt,
+                language='python',
+                show_label=False,
+                interactive=True,
+            )
+
+                
     gr.Markdown("---")
     with gr.Row():
         gen_code_button = gr.Button("Generate Code")

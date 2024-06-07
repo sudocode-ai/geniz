@@ -8,6 +8,7 @@ import pickle
 from pathlib import Path
 from typing import Callable, List, Optional
 from unittest.mock import MagicMock
+from multiprocessing.pool import ThreadPool
 
 import isort
 import ray
@@ -27,7 +28,6 @@ from .util import (PersistStateToFile, alphanumeric_uuid, entropy_list,
                    load_prompt, make_function_call_statement_str,
                    shorten_answer, shorten_list)
 from .data_collector import DATA_DIST
-
 
 
 _INPUT = 'input.py'
@@ -279,12 +279,16 @@ def save_locked_tests(locked_tests):
         json.dump(locked_tests, f, indent=2)
 
 
+def execute_all_tests_in_parallel():
+    all_test_cases = get_all_test_cases()
+    with ThreadPool() as p:
+        p.map(lambda x: x(), all_test_cases)
+
+
 def refresh_all_data():
     DATA_DIST.clear()
     auto_import()
-    all_test_cases = get_all_test_cases()
-    for test in all_test_cases:
-        test()
+    execute_all_tests_in_parallel()
 
 
 def generate_code():
@@ -316,18 +320,20 @@ def get_test_and_candidate_info():
         most_frequent_output = outputs[0]
         print(
             f'=== {shorten_answer(input)} -> {most_frequent_output}, entropy: {entropy_list(dist):.2f}, dist: {shorten_list(dist)}')
-        
+
         outputs_info = defaultdict(list)
         for candidate_id, input_to_datapoint_dict in candidate_to_input_output.items():
             for _, datapoint in input_to_datapoint_dict.items():
                 try:
-                    input_str, output_str = datapoint_to_input_output_str(datapoint)
+                    input_str, output_str = datapoint_to_input_output_str(
+                        datapoint)
                 except:
                     continue
                 if input_str != input:
                     continue
-                
-                call_str = make_function_call_statement_str(datapoint.input, datapoint.output, function_name, limit=1000)
+
+                call_str = make_function_call_statement_str(
+                    datapoint.input, datapoint.output, function_name, limit=1000)
                 outputs_info[output_str].append({
                     'datapoint': datapoint,
                     'call_str': call_str,
@@ -345,7 +351,8 @@ def get_test_and_candidate_info():
         if locked:
             correct_info_list = outputs_info[default_output_str]
             for info in correct_info_list:
-                candidate_to_passed_locked_tests[info['candidate_id']].add(this_test_id)
+                candidate_to_passed_locked_tests[info['candidate_id']].add(
+                    this_test_id)
 
         test_info.append({
             'id': this_test_id,
@@ -360,15 +367,17 @@ def get_test_and_candidate_info():
     all_candidates = get_all_agents()
     all_candidate_ids = [c.id for c in all_candidates]
 
-    candidate_to_stats_scores = calculate_candidates_stats_scores(all_candidate_ids)
+    candidate_to_stats_scores = calculate_candidates_stats_scores(
+        all_candidate_ids)
     candidate_info = [{
-            'candidate_id': candidate_id,
-            'candidate': find_agent(candidate_id),
-            'stats_score': stats_score,
-            'tests_score': len(candidate_to_passed_locked_tests[candidate_id]),
-            'passed_tests': candidate_to_passed_locked_tests[candidate_id],
-        } for candidate_id, stats_score in candidate_to_stats_scores.items()]
-    
-    test_info = sorted(test_info, key=lambda x:x['locked'], reverse=True)
-    candidate_info = sorted(candidate_info, key=lambda x:(x['tests_score'], x['stats_score']), reverse=True)
+        'candidate_id': candidate_id,
+        'candidate': find_agent(candidate_id),
+        'stats_score': stats_score,
+        'tests_score': len(candidate_to_passed_locked_tests[candidate_id]),
+        'passed_tests': candidate_to_passed_locked_tests[candidate_id],
+    } for candidate_id, stats_score in candidate_to_stats_scores.items()]
+
+    test_info = sorted(test_info, key=lambda x: x['locked'], reverse=True)
+    candidate_info = sorted(candidate_info, key=lambda x: (
+        x['tests_score'], x['stats_score']), reverse=True)
     return test_info, candidate_info, locked_tests
