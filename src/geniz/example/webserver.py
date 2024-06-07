@@ -1,5 +1,5 @@
 import copy
-import logging
+import json
 import os
 from functools import partial
 
@@ -9,12 +9,13 @@ from geniz.coder import (generate_code, generate_test,
                          get_test_and_candidate_info,
                          save_locked_tests)
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
-
 os.environ['RAY_IGNORE_UNHANDLED_ERRORS'] = '1'
+
+if os.path.exists('keys.json'):
+    with open('keys.json', 'r') as f:
+        cfg = json.load(f)
+        for i in cfg:
+            os.environ[i] = cfg[i]
 
 
 if gr.NO_RELOAD:
