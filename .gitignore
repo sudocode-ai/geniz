@@ -129,4 +129,8 @@ dmypy.json
 .pyre/
 
 # Custom
+candidate_*
+input_*
 RoundInfo.json
+keys.json
+locked_tests.json
