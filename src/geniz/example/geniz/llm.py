@@ -1,13 +1,10 @@
 import os
-import litellm
 from typing import Dict, List, Optional
 
+import litellm
 from pydantic import BaseModel
 
-from .round_info import get_round_info
-from .keys import MODEL, API_BASE, API_KEY
-
-N = 1
+BATCH_INFERENCE_N = 1
 
 
 class ChatMessage(BaseModel):
@@ -21,12 +18,17 @@ class ChatMessage(BaseModel):
         return f"{self.role}: {self.content}"
 
 
-def query_llm(prompt: str, *, system_message: str = '', previous_history: List[ChatMessage] = [], filename: Optional[str] = None, model=MODEL, n=N):
+def query_llm(prompt: str, *, system_message: str = '', previous_history: List[ChatMessage] = [], filename: Optional[str] = None):
+    MODEL = os.getenv('MODEL', 'openai/Phi-3-mini-128k-instruct-a100')
+    API_BASE = os.getenv('API_BASE', 'https://geniz.ai/v1')
+    API_KEY = os.getenv('API_KEY', '')
+    n = os.getenv('BATCH_INFERENCE_N', '1')
+
     messages: List[ChatMessage] = (
         previous_history + [ChatMessage(role='user', content=prompt)])
     if filename is not None:
         with open(f'{filename}.prompt.txt', 'w') as f:
-            f.write(f'{model}\n\n{system_message}\n\n')
+            f.write(f'{MODEL}\n\n{system_message}\n\n')
             for i, message in enumerate(messages):
                 f.write(f'=== {i}: {message.role} ===\n')
                 f.write(message.content)
@@ -36,28 +38,18 @@ def query_llm(prompt: str, *, system_message: str = '', previous_history: List[C
     if system_message:
         final_messages = [
             {"role": "system", "content": system_message}] + final_messages
-        
-    round_info = get_round_info()
-    session_id = round_info.session_id
+
 
     if n == 1:
         n = None
     response = litellm.completion(
-        model=f"openai/{model}",
+        model=MODEL,
         api_key=API_KEY,
         api_base=API_BASE,
         messages=final_messages,
         temperature=1.2,
         num_retries=1,
         n=n,
-        metadata={
-            "generation_name": "autogenesis-0510",
-            "generation_id": "autogenesis-0510",
-            "version":  "0510",
-            "trace_user_id": "ning",
-            "session_id": session_id,
-            "tags": ["autogenesis", MODEL],
-        },
     )
     replys = [choice.message.content for choice in response.choices]
     histories = []
