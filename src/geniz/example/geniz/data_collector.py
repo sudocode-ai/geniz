@@ -1,12 +1,14 @@
 import traceback
 from collections import defaultdict
 from contextlib import contextmanager
+from threading import Lock
 from typing import Any, Dict, List, Tuple
 
 from pydantic import BaseModel
 
 from .util import shorten_answer
 
+_lock = Lock()
 DATA_DIST = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
 COLLECTION_MODE = False
@@ -46,6 +48,7 @@ class DataCollector(BaseModel):
         # print(f'Record {datapoint.debug_str()}')
 
     def merge(self):
+        _lock.acquire()
         for datapoint in self.data_points:
             try:
                 input_str, output_str = datapoint_to_input_output_str(datapoint)
@@ -53,6 +56,7 @@ class DataCollector(BaseModel):
                     datapoint)
             except:
                 pass
+        _lock.release()
 
 
 class ReenterException(Exception):
