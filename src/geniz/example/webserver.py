@@ -131,13 +131,19 @@ with gr.Blocks(css=_CSS) as demo:
                     tests_score = candidate_info['tests_score']
                     stars = '⭐' * tests_score
                     with gr.Accordion(label=f'{candidate_id} {stars}',
-                                      open=False,
-                                      elem_id=candidate_id):
-                        code_editor = gr.Code(
-                            value=candidate.clean_source_code,
-                            language='python',
-                            interactive=True,
-                            show_label=False)
+                                      open=False):
+                        with gr.Row():
+                            code_editor = gr.Code(
+                                value=candidate.clean_source_code,
+                                language='python',
+                                interactive=True,
+                                show_label=False)
+                        for test_id, test_call_str in candidate_info['passed_tests'].items():
+                            with gr.Row():
+                                gr.Text(f'✅ {test_call_str}', show_label=False)
+                        for test_id, test_call_str in candidate_info['failed_tests'].items():
+                            with gr.Row():
+                                gr.Text(f'❌ {test_call_str}', show_label=False)
                         with gr.Row():
                             delete_button = gr.Button('Delete', scale=0)
 
@@ -196,29 +202,43 @@ with gr.Blocks(css=_CSS) as demo:
                             outputs=[test_box, locked_tests_state])
 
                         def lock_checkbox_trigger(this_info, true_or_false, selected_output, candidate_info, locked_tests):
+                            new_pass_candidates = []
+                            new_fail_candidates = []
+                            for output, output_info_list in this_info['outputs_info'].items():
+                                if output == selected_output:
+                                    for x in output_info_list:
+                                        new_pass_candidates.append((x['candidate_id'], x['call_str']))
+                                else:
+                                    for x in output_info_list:
+                                        new_fail_candidates.append((x['candidate_id'], x['call_str']))
+
                             if true_or_false is True:
                                 locked_tests[this_info['input']
                                              ] = selected_output
                                 save_locked_tests(locked_tests)
-                                new_pass_candidates = [
-                                    x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
-                                for info in candidate_info:
-                                    if info['candidate_id'] in new_pass_candidates:
-                                        info['passed_tests'].add(
-                                            this_info['id'])
-                                        info['tests_score'] = len(
-                                            info['passed_tests'])
+                                for candidate_id, call_str in new_pass_candidates:
+                                    for info in candidate_info:
+                                        if candidate_id == info['candidate_id']:
+                                            info['passed_tests'][this_info['id']] = call_str
+                                            info['tests_score'] = len(
+                                                info['passed_tests'])
+                                for candidate_id, call_str in new_fail_candidates:
+                                    for info in candidate_info:
+                                        if candidate_id == info['candidate_id']:
+                                            info['failed_tests'][this_info['id']] = call_str
                             else:
                                 locked_tests.pop(this_info['input'], None)
                                 save_locked_tests(locked_tests)
-                                pass_candidates_to_remove = [
-                                    x['candidate_id'] for x in this_info['outputs_info'][selected_output]]
-                                for info in candidate_info:
-                                    if info['candidate_id'] in pass_candidates_to_remove:
-                                        info['passed_tests'].remove(
-                                            this_info['id'])
-                                        info['tests_score'] = len(
-                                            info['passed_tests'])
+                                for candidate_id, call_str in new_pass_candidates:
+                                    for info in candidate_info:
+                                        if candidate_id == info['candidate_id']:
+                                            info['passed_tests'].pop(this_info['id'], None)
+                                            info['tests_score'] = len(
+                                                info['passed_tests'])
+                                for candidate_id, call_str in new_fail_candidates:
+                                    for info in candidate_info:
+                                        if candidate_id == info['candidate_id']:
+                                            info['failed_tests'].pop(this_info['id'], None)
                             return candidate_info, locked_tests
 
                         lock_checkbox.change(

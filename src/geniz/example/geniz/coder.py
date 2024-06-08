@@ -310,7 +310,8 @@ def get_test_and_candidate_info():
 
     locked_tests = load_locked_tests()
 
-    candidate_to_passed_locked_tests = defaultdict(set)
+    candidate_to_passed_locked_tests = defaultdict(dict)
+    candidate_to_failed_locked_tests = defaultdict(dict)
     test_info = []
     candidate_to_input_output = get_candidate_input_output()
     test_dist = get_test_dist()
@@ -349,10 +350,13 @@ def get_test_and_candidate_info():
 
         this_test_id = alphanumeric_uuid()
         if locked:
-            correct_info_list = outputs_info[default_output_str]
-            for info in correct_info_list:
-                candidate_to_passed_locked_tests[info['candidate_id']].add(
-                    this_test_id)
+            for output, info in outputs_info.items():
+                if output == default_output_str:
+                    for i in info:
+                        candidate_to_passed_locked_tests[i['candidate_id']][this_test_id] = i['call_str']
+                else:
+                    for i in info:
+                        candidate_to_failed_locked_tests[i['candidate_id']][this_test_id] = i['call_str']
 
         test_info.append({
             'id': this_test_id,
@@ -375,6 +379,7 @@ def get_test_and_candidate_info():
         'stats_score': stats_score,
         'tests_score': len(candidate_to_passed_locked_tests[candidate_id]),
         'passed_tests': candidate_to_passed_locked_tests[candidate_id],
+        'failed_tests': candidate_to_failed_locked_tests[candidate_id],
     } for candidate_id, stats_score in candidate_to_stats_scores.items()]
 
     test_info = sorted(test_info, key=lambda x: x['locked'], reverse=True)
