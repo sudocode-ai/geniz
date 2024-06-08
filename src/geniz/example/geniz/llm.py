@@ -22,7 +22,7 @@ def query_llm(prompt: str, *, system_message: str = '', previous_history: List[C
     MODEL = os.getenv('MODEL', 'openai/Phi-3-mini-128k-instruct-a100')
     API_BASE = os.getenv('API_BASE', 'https://geniz.ai/v1')
     API_KEY = os.getenv('API_KEY', '')
-    n = os.getenv('BATCH_INFERENCE_N', '1')
+    n = int(os.getenv('BATCH_INFERENCE_N', '1'))
 
     messages: List[ChatMessage] = (
         previous_history + [ChatMessage(role='user', content=prompt)])

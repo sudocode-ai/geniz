@@ -1,24 +1,28 @@
-from collections import defaultdict
 import functools
 import inspect
 import json
 import logging
 import os
 import pickle
+from collections import defaultdict
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Callable, List, Optional
 from unittest.mock import MagicMock
-from multiprocessing.pool import ThreadPool
 
 import isort
 import ray
 from pydantic import BaseModel
 
 from .auto_import import auto_import
-from .data_collector import (DataPoint, calculate_candidates_stats_scores,
+from .data_collector import (DATA_DIST, DataPoint,
+                             calculate_candidates_stats_scores,
+                             data_collection_mode,
+                             datapoint_to_input_output_str,
                              get_candidate_input_output, get_data_collector,
-                             get_test_dist, is_data_collection_mode, get_data_dist,
-                             reduce_to_most_frequent_answer, datapoint_to_input_output_str)
+                             get_data_dist, get_test_dist,
+                             is_data_collection_mode,
+                             reduce_to_most_frequent_answer)
 from .debugger import get_all_test_cases
 from .llm import ChatMessage, query_llm
 from .python_code import PythonCode
@@ -27,8 +31,6 @@ from .test_designer import create_test_file
 from .util import (PersistStateToFile, alphanumeric_uuid, entropy_list,
                    load_prompt, make_function_call_statement_str,
                    shorten_answer, shorten_list)
-from .data_collector import DATA_DIST
-
 
 _INPUT = 'input.py'
 _OUTPUT = 'output.py'
@@ -224,6 +226,9 @@ def CodeAgent(method=None, **kwargs):
             always_true.__eq__.return_value = True
             always_true.__gt__.return_value = True
             always_true.__lt__.return_value = True
+            always_true.__abs__.return_value = 0
+            always_true.__neg__.return_value = 0
+            always_true.__pos__.return_value = 0
 
             if is_data_collection_mode():
                 call_refs = [agent.call_and_record_data_remotely(
@@ -281,8 +286,9 @@ def save_locked_tests(locked_tests):
 
 def execute_all_tests_in_parallel():
     all_test_cases = get_all_test_cases()
-    with ThreadPool() as p:
-        p.map(lambda x: x(), all_test_cases)
+    with data_collection_mode(test_case='parallel_mode'):
+        with ThreadPool() as p:
+            p.map(lambda x: x(), all_test_cases)
 
 
 def refresh_all_data():
