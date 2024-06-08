@@ -183,60 +183,28 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                             inputs=[output_radio_group, app_state],
                             outputs=[test_box, app_state])
 
-                        def lock_checkbox_trigger(this_info, true_or_false, selected_output, app_state):
-                            candidate_info = app_state['candidate_info']
-                            locked_tests =  app_state['locked_tests']
-                            new_pass_candidates = []
-                            new_fail_candidates = []
-                            for output, output_info_list in this_info['outputs_info'].items():
-                                if output == selected_output:
-                                    for x in output_info_list:
-                                        new_pass_candidates.append((x['candidate_id'], x['call_str']))
-                                else:
-                                    for x in output_info_list:
-                                        new_fail_candidates.append((x['candidate_id'], x['call_str']))
-
+                        def lock_checkbox_trigger(this_info, true_or_false, selected_output):
+                            locked_tests =  this_app_state['locked_tests']
                             if true_or_false is True:
                                 locked_tests[this_info['input']
                                              ] = selected_output
                                 save_locked_tests(locked_tests)
-                                for candidate_id, call_str in new_pass_candidates:
-                                    for info in candidate_info:
-                                        if candidate_id == info['candidate_id']:
-                                            info['passed_tests'][this_info['id']] = call_str
-                                            info['tests_score'] = len(
-                                                info['passed_tests'])
-                                for candidate_id, call_str in new_fail_candidates:
-                                    for info in candidate_info:
-                                        if candidate_id == info['candidate_id']:
-                                            info['failed_tests'][this_info['id']] = call_str
                             else:
                                 locked_tests.pop(this_info['input'], None)
                                 save_locked_tests(locked_tests)
-                                for candidate_id, call_str in new_pass_candidates:
-                                    for info in candidate_info:
-                                        if candidate_id == info['candidate_id']:
-                                            info['passed_tests'].pop(this_info['id'], None)
-                                            info['tests_score'] = len(
-                                                info['passed_tests'])
-                                for candidate_id, call_str in new_fail_candidates:
-                                    for info in candidate_info:
-                                        if candidate_id == info['candidate_id']:
-                                            info['failed_tests'].pop(this_info['id'], None)
-                            return app_state
 
                         lock_checkbox.change(
                             partial(lock_checkbox_trigger, copy.copy(info)),
-                            inputs=[lock_checkbox, output_radio_group, app_state],
-                            outputs=app_state,
-                            js='''(x, y, z, p) => {
+                            inputs=[lock_checkbox, output_radio_group],
+                            outputs=None,
+                            js='''(x, y) => {
     var element = document.getElementById("''' + str(elem_id) + '''");
     if (x) {
         element.classList.add("test_case_locked");
     } else {
         element.classList.remove("test_case_locked");
     }
-    return [x, y, z, p];
+    return [x, y];
 }
 ''')
 
