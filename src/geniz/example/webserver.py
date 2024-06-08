@@ -1,13 +1,19 @@
 import copy
 import json
+import logging
 import os
 from functools import partial
 
 import gradio as gr
 import ray
+
 from geniz.coder import (generate_code, generate_test,
-                         get_test_and_candidate_info,
-                         save_locked_tests)
+                         get_test_and_candidate_info, save_locked_tests)
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 os.environ['RAY_IGNORE_UNHANDLED_ERRORS'] = '1'
 
@@ -81,7 +87,8 @@ with gr.Blocks(css=_CSS) as demo:
                     os.getenv('API_KEY', ''), label='API_KEY', type='password', interactive=True)
                 model_box = gr.Textbox(
                     os.getenv('MODEL', 'openai/Phi-3-mini-128k-instruct-a100'), label='MODEL', interactive=True)
-                batch_inference_n = gr.Dropdown([1, 3, 5, 10], value=3, label='Batch Inference', interactive=True)
+                batch_inference_n = gr.Dropdown(
+                    [1, 3, 5, 10], value=3, label='Batch Inference', interactive=True)
 
             def change_api_base(input):
                 os.environ['API_BASE'] = input
@@ -97,7 +104,8 @@ with gr.Blocks(css=_CSS) as demo:
 
             def change_batch_inference(input):
                 os.environ['BATCH_INFERENCE_N'] = input
-            batch_inference_n.input(change_batch_inference, inputs=[batch_inference_n])
+            batch_inference_n.input(
+                change_batch_inference, inputs=[batch_inference_n])
 
     with gr.Row():
         with gr.Accordion(label='Problem Description', open=True):
@@ -108,7 +116,6 @@ with gr.Blocks(css=_CSS) as demo:
                 interactive=True,
             )
 
-                
     gr.Markdown("---")
     with gr.Row():
         gen_code_button = gr.Button("Generate Code")
