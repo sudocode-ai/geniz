@@ -385,4 +385,8 @@ def get_test_and_candidate_info():
     test_info = sorted(test_info, key=lambda x: x['locked'], reverse=True)
     candidate_info = sorted(candidate_info, key=lambda x: (
         x['tests_score'], x['stats_score']), reverse=True)
-    return test_info, candidate_info, locked_tests
+    return {
+        'test_info': test_info,
+        'candidate_info': candidate_info,
+        'locked_tests': locked_tests
+    }
