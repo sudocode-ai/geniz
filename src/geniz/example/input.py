@@ -1,20 +1,22 @@
 import geniz
-
-def is_palindrome(string: str) -> bool:
-    """ Test if given string is a palindrome """
-    return string == string[::-1]
-
+from typing import List
 
 @geniz.CodeAgent()
-def make_palindrome(string: str) -> str:
-    """ Find the shortest palindrome that begins with a supplied string.
-    Algorithm idea is simple:
-    - Find the longest postfix of supplied string that is a palindrome.
-    - Append to the end of the string reverse of a string prefix that comes before the palindromic suffix.
-    >>> make_palindrome('')
-    ''
-    >>> make_palindrome('cat')
-    'catac'
-    >>> make_palindrome('cata')
-    'catac'
+def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+    """
+    Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.
+
+    The overall run time complexity should be O(log (m+n)).
+
+
+    Example 1:
+
+    Input: nums1 = [1,3], nums2 = [2]
+    Output: 2.00000
+    Explanation: merged array = [1,2,3] and median is 2.
+    Example 2:
+
+    Input: nums1 = [1,2], nums2 = [3,4]
+    Output: 2.50000
+    Explanation: merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.
     """
