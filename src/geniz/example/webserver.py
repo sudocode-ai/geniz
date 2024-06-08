@@ -71,7 +71,7 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                 model_box = gr.Textbox(
                     os.getenv('MODEL', 'openai/Phi-3-mini-128k-instruct-a100'), label='MODEL', interactive=True)
                 batch_inference_n = gr.Dropdown(
-                    [1, 3, 5, 10], value=3, label='Batch Inference', interactive=True)
+                    [1, 3, 5, 10], value=1, label='Batch Inference', interactive=True)
 
             def change_api_base(input):
                 os.environ['API_BASE'] = input
@@ -86,7 +86,7 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
             model_box.input(change_model, inputs=[model_box])
 
             def change_batch_inference(input):
-                os.environ['BATCH_INFERENCE_N'] = input
+                os.environ['BATCH_INFERENCE_N'] = str(input)
             batch_inference_n.input(
                 change_batch_inference, inputs=[batch_inference_n])
 
@@ -131,7 +131,6 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                                 gr.Text(f'❌ {test_call_str}', show_label=False)
                         with gr.Row():
                             delete_button = gr.Button('Delete', scale=0)
-
                             def click_delete_button(this_candidate_info, this_app_state):
                                 this_candidate_id = this_candidate_info['candidate_id']
                                 this_candidate = this_candidate_info['candidate']
@@ -141,6 +140,27 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                                 return this_app_state
                             delete_button.click(partial(click_delete_button, copy.copy(candidate_info)),
                                                 inputs=[app_state], outputs=app_state)
+                            
+                            fix_button = gr.Button('Fix', scale=0)
+                            def click_fix_button(this_candidate_info):
+                                this_candidate = this_candidate_info['candidate']
+                                passed_tests_strs = '\n'.join([call_str for _, call_str in this_candidate_info['passed_tests'].items()])
+                                failed_tests_strs = '\n'.join([call_str for _, call_str in this_candidate_info['failed_tests'].items()])
+                                execution_result = f'''Here are correct/wrong test cases after real execution of the program.
+
+### Correct cases ###
+{passed_tests_strs}
+
+### Wrong cases ###
+{failed_tests_strs}
+
+Please fix and regenerate the program.
+'''
+                                this_candidate.generate_candidate_by_execution_result(execution_result)
+                                return get_test_and_candidate_info()
+                            fix_button.click(partial(click_fix_button, copy.copy(candidate_info)),
+                                             inputs=None, outputs=app_state)
+                            
             with gr.Column():
                 for info in this_app_state['test_info']:
                     default_output_str = info['default_output_str']
