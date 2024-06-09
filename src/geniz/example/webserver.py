@@ -7,8 +7,12 @@ from functools import partial
 import gradio as gr
 import ray
 
-from geniz.coder import (generate_code, generate_test,
-                         get_test_and_candidate_info, save_locked_tests)
+from geniz.coder import (
+    generate_code,
+    generate_test,
+    get_test_and_candidate_info,
+    save_locked_tests,
+)
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -90,6 +94,10 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
             batch_inference_n.input(
                 change_batch_inference, inputs=[batch_inference_n])
 
+    def store_problem_prompt(input):
+        with open('input.py', 'w') as f:
+            f.write(input)
+
     with gr.Row():
         with gr.Accordion(label='Problem Description', open=True):
             prompt_editor = gr.Code(
@@ -98,6 +106,7 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                 show_label=False,
                 interactive=True,
             )
+            prompt_editor.change(lambda problem: store_problem_prompt(problem), inputs=[prompt_editor])
 
     gr.Markdown("---")
     with gr.Row():
