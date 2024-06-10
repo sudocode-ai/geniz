@@ -1,4 +1,5 @@
 import functools
+import glob
 import inspect
 import json
 import logging
@@ -6,6 +7,7 @@ import os
 import pickle
 from collections import defaultdict
 from multiprocessing.pool import ThreadPool
+from os.path import basename, dirname, isfile, join
 from pathlib import Path
 from typing import Callable, List, Optional
 from unittest.mock import MagicMock
@@ -15,25 +17,37 @@ import ray
 from pydantic import BaseModel
 
 from .auto_import import auto_import
-from .data_collector import (DATA_DIST, DataPoint,
-                             calculate_candidates_stats_scores,
-                             data_collection_mode,
-                             datapoint_to_input_output_str,
-                             get_candidate_input_output, get_data_collector,
-                             get_data_dist, get_test_dist,
-                             is_data_collection_mode,
-                             reduce_to_most_frequent_answer)
+from .data_collector import (
+    DATA_DIST,
+    DataPoint,
+    calculate_candidates_stats_scores,
+    data_collection_mode,
+    datapoint_to_input_output_str,
+    get_candidate_input_output,
+    get_data_collector,
+    get_data_dist,
+    get_test_dist,
+    is_data_collection_mode,
+    reduce_to_most_frequent_answer,
+)
 from .debugger import get_all_test_cases
 from .llm import ChatMessage, query_llm
 from .python_code import PythonCode
 from .round_info import get_round_info
 from .test_designer import create_test_file
-from .util import (PersistStateToFile, alphanumeric_uuid, entropy_list,
-                   load_prompt, make_function_call_statement_str,
-                   shorten_answer, shorten_list)
+from .util import (
+    PersistStateToFile,
+    alphanumeric_uuid,
+    entropy_list,
+    load_prompt,
+    make_function_call_statement_str,
+    shorten_answer,
+    shorten_list,
+)
 
 _INPUT = 'input.py'
 _OUTPUT = 'output.py'
+_CANDIDATE_PREFIX = 'candidate_'
 
 _REGISTRY = dict()
 
@@ -142,7 +156,7 @@ final_answer = {self.function_name}
     def query_llm_and_save_candidate(self, message, system_message=PROGRAMMER_PROMPT.format()) -> Optional[List[str]]:
         previous_history = self.load_previous_history()
         new_id = str(alphanumeric_uuid()[-5:])
-        output_filename = f'candidate_{new_id}.py'
+        output_filename = f'{_CANDIDATE_PREFIX}{new_id}.py'
         replys, histories = query_llm(
             message, system_message=system_message, previous_history=previous_history, filename=output_filename)
 
@@ -162,7 +176,7 @@ import geniz
 
 {candidate.code_text}
 '''
-                new_candidate_filename = f'candidate_{new_id}_{i}.py'
+                new_candidate_filename = f'{_CANDIDATE_PREFIX}{new_id}_{i}.py'
                 with open(new_candidate_filename, 'w') as f:
                     f.write(final_code)
                     logging.info(f'Wrote to {new_candidate_filename}')
@@ -308,6 +322,15 @@ def generate_test():
     genesis = get_genesis()
     genesis.generate_test_case()
 
+def clear_all_code():
+    logging.info('=== Clear all code')
+    modules = glob.glob(join(dirname(__file__), "..", "*.*"))
+    all_files = [basename(f)
+                              for f in modules if isfile(f) and not f.startswith('__') and f != 'main.py']
+    for file in all_files:
+        if file.startswith(_CANDIDATE_PREFIX):
+            logging.info(f'=== Deleting {file}')
+            os.remove(file)
 
 def get_test_and_candidate_info():
     refresh_all_data()

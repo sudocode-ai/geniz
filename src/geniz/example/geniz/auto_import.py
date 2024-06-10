@@ -2,6 +2,7 @@ import glob
 import importlib
 from os.path import basename, dirname, isfile, join
 
+
 def auto_import():
     modules = glob.glob(join(dirname(__file__), "..", "*.py"))
     python_files_to_import = [basename(f)
