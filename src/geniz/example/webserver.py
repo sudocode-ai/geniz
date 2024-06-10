@@ -8,6 +8,7 @@ import gradio as gr
 import ray
 
 from geniz.coder import (
+    clear_all_code,
     generate_code,
     generate_test,
     get_test_and_candidate_info,
@@ -65,6 +66,11 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
         generate_test()
         return get_test_and_candidate_info()
 
+    def click_clear_all_code(app_state):
+        clear_all_code()
+        app_state['candidate_info'].clear()
+        return get_test_and_candidate_info()
+
     with gr.Row():
         with gr.Accordion(label='LLM settings', open=True):
             with gr.Row():
@@ -113,6 +119,7 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
         gen_code_button = gr.Button("Generate Code")
         gen_test_button = gr.Button("Generate Test")
         run_all_tests_button = gr.Button("Run All Tests")
+        clear_all_code_button = gr.Button("Clear All Generated Code")
 
     @gr.render(inputs=[app_state])
     def render_app(this_app_state):
@@ -240,6 +247,7 @@ Please fix and regenerate the program.
     gen_code_button.click(click_gen_code, inputs=None, outputs=app_state)
     gen_test_button.click(click_gen_test, inputs=None, outputs=app_state)
     run_all_tests_button.click(click_run_all_tests, inputs=None, outputs=app_state)
+    clear_all_code_button.click(click_clear_all_code, inputs=[app_state], outputs=app_state)
     # code_editor.change(code_editor_change, code_editor, None)
     # gr.on(triggers=None, fn=click_run_all_tests, inputs=[], every=2)
     # dep = demo.load(click_run_all_tests, inputs=[], outputs=[test_info_state], every=2)
