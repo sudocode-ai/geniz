@@ -2,7 +2,7 @@
 
 Geniz is an interactive (LLM-based) code-gen tool which makes you effectively solve any hard coding problems (HumanEval/LeetCode/TopCoder) in few minutes by few clicks.
 
-Genis has the all-in-one coding environment. It generates multiple candidate code snippets, multiple test cases, and automatically run test cases against all candidates in parallel, then analyze candidates and prevent user their runtime information spectrum.
+Geniz has the all-in-one coding environment. It generates multiple candidate code snippets, multiple test cases, and automatically run test cases against all candidates in parallel, then analyze candidates and prevent user their runtime information spectrum.
 
 Geniz is an experimental project to pratice our vision to AI-dev.
 
