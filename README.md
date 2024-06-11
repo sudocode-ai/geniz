@@ -32,7 +32,7 @@ We’ve benchmarked a few different open source models against HumanEval **witho
 | Model                           | Baseline | Geniz (without human) |
 | ------------------------------- | -------- | --------------------- |
 | OpenCodeInterpreter-1.3B        | 48.7%*   | 72.0% (+45%)          |
-| Llama-3-70b-instruct            | 81.7%    | 72.0% (+5%)           |
+| Llama-3-70b-instruct            | 81.7%    | 85.9% (+5%)           |
 | Phi-3-mini-128k-instruct (3.8B) | 57.9%    | 74.1% (+28%)          |
 
 Note: * is our reproduction.
