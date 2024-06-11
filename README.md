@@ -3,7 +3,7 @@
 Geniz is an interactive code-gen app that explores a fundamentally different approach to coding tasks. Instead of manually writing code, users can leverage the power of large language models (LLMs) to generate solutions by simply providing the desired input and output.
 
 Here is a demo video.
-[![Demo Video](static/screenshot_0.png)](https://www.youtube.com/watch?v=S_vB7qQ3qs4)
+[![Demo Video](static/demo_1.gif)](https://www.youtube.com/watch?v=S_vB7qQ3qs4)
 
 ### Revolutionizing Coding
 
