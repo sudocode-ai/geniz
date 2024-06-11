@@ -20,13 +20,10 @@ from .data_collector import (DATA_DIST, DataPoint,
                              data_collection_mode,
                              datapoint_to_input_output_str,
                              get_candidate_input_output, get_data_collector,
-                             get_data_dist, get_test_dist,
-                             is_data_collection_mode,
-                             reduce_to_most_frequent_answer)
+                             get_test_dist, is_data_collection_mode)
 from .debugger import get_all_test_cases
 from .llm import ChatMessage, query_llm
 from .python_code import PythonCode
-from .round_info import get_round_info
 from .test_designer import create_test_file
 from .util import (PersistStateToFile, alphanumeric_uuid, entropy_list,
                    load_prompt, make_function_call_statement_str,
@@ -189,14 +186,7 @@ Generate '{self.function_name}'.
         return bool(self.query_llm_and_save_candidate(message))
 
     def generate_candidate_by_execution_result(self, execution_results: str) -> bool:
-        message = f'''Check the correctness based on execution results.
-```
-{execution_results}
-```
-
-If you found the function {self.function_name} is not correct, re-generate it.
-'''
-        return bool(self.query_llm_and_save_candidate(message))
+        return bool(self.query_llm_and_save_candidate(execution_results))
 
 
 def get_all_agents() -> List[CodeAgentState]:

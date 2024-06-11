@@ -5,7 +5,7 @@ from os.path import basename, dirname, isfile, join
 def auto_import():
     modules = glob.glob(join(dirname(__file__), "..", "*.py"))
     python_files_to_import = [basename(f)
-                              for f in modules if isfile(f) and not f.startswith('__') and f != 'main.py']
+                              for f in modules if isfile(f) and not f.startswith('__') and f != 'webserver.py']
     for py_file in python_files_to_import:
         module_name = py_file.removesuffix('.py')
         try:

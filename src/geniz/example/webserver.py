@@ -10,6 +10,7 @@ import ray
 from geniz.coder import (
     generate_code,
     generate_test,
+    get_genesis,
     get_test_and_candidate_info,
     save_locked_tests,
 )
@@ -33,9 +34,8 @@ if gr.NO_RELOAD:
 
 
 def get_original_problem_prompt():
-    with open('input.py', 'r') as f:
-        code_file = f.read()
-    return code_file
+    genesis = get_genesis()
+    return genesis.clean_source_code
 
 
 initial_app_state = get_test_and_candidate_info()
@@ -94,9 +94,9 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
             batch_inference_n.input(
                 change_batch_inference, inputs=[batch_inference_n])
 
-    def store_problem_prompt(input):
-        with open('input.py', 'w') as f:
-            f.write(input)
+    def update_problem_prompt(input):
+        genesis = get_genesis()
+        genesis.source_code = input
 
     with gr.Row():
         with gr.Accordion(label='Problem Description', open=True):
@@ -106,7 +106,8 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                 show_label=False,
                 interactive=True,
             )
-            prompt_editor.change(lambda problem: store_problem_prompt(problem), inputs=[prompt_editor])
+            prompt_editor.change(lambda problem: update_problem_prompt(
+                problem), inputs=[prompt_editor])
 
     gr.Markdown("---")
     with gr.Row():
@@ -140,36 +141,46 @@ with gr.Blocks(css=_CSS, title='Geniz') as demo:
                                 gr.Text(f'❌ {test_call_str}', show_label=False)
                         with gr.Row():
                             delete_button = gr.Button('Delete', scale=0)
+
                             def click_delete_button(this_candidate_info, this_app_state):
                                 this_candidate_id = this_candidate_info['candidate_id']
                                 this_candidate = this_candidate_info['candidate']
                                 this_candidate.delete()
                                 all_candidate_info = this_app_state['candidate_info']
-                                this_app_state['candidate_info'] = [c for c in all_candidate_info if c['candidate_id'] != this_candidate_id]
+                                this_app_state['candidate_info'] = [
+                                    c for c in all_candidate_info if c['candidate_id'] != this_candidate_id]
                                 return this_app_state
                             delete_button.click(partial(click_delete_button, copy.copy(candidate_info)),
                                                 inputs=[app_state], outputs=app_state)
-                            
+
                             fix_button = gr.Button('Fix', scale=0)
+
                             def click_fix_button(this_candidate_info):
                                 this_candidate = this_candidate_info['candidate']
-                                passed_tests_strs = '\n'.join([call_str for _, call_str in this_candidate_info['passed_tests'].items()])
-                                failed_tests_strs = '\n'.join([call_str for _, call_str in this_candidate_info['failed_tests'].items()])
+                                passed_tests_strs = '\n'.join(
+                                    [call_str for _, call_str in this_candidate_info['passed_tests'].items()])
+                                failed_tests_strs = '\n'.join(
+                                    [call_str for _, call_str in this_candidate_info['failed_tests'].items()])
                                 execution_result = f'''Here are correct/wrong test cases after real execution of the program.
 
-### Correct cases ###
+### Correct input output cases ###
+```
 {passed_tests_strs}
+```
 
-### Wrong cases ###
+### Wrong input output cases ###
+```
 {failed_tests_strs}
+```
 
-Please fix and regenerate the program.
+Please fix wrong cases and regenerate the program.
 '''
-                                this_candidate.generate_candidate_by_execution_result(execution_result)
+                                this_candidate.generate_candidate_by_execution_result(
+                                    execution_result)
                                 return get_test_and_candidate_info()
                             fix_button.click(partial(click_fix_button, copy.copy(candidate_info)),
                                              inputs=None, outputs=app_state)
-                            
+
             with gr.Column():
                 for info in this_app_state['test_info']:
                     default_output_str = info['default_output_str']
@@ -213,7 +224,7 @@ Please fix and regenerate the program.
                             outputs=[test_box, app_state])
 
                         def lock_checkbox_trigger(this_info, true_or_false, selected_output):
-                            locked_tests =  this_app_state['locked_tests']
+                            locked_tests = this_app_state['locked_tests']
                             if true_or_false is True:
                                 locked_tests[this_info['input']
                                              ] = selected_output
@@ -239,7 +250,8 @@ Please fix and regenerate the program.
 
     gen_code_button.click(click_gen_code, inputs=None, outputs=app_state)
     gen_test_button.click(click_gen_test, inputs=None, outputs=app_state)
-    run_all_tests_button.click(click_run_all_tests, inputs=None, outputs=app_state)
+    run_all_tests_button.click(
+        click_run_all_tests, inputs=None, outputs=app_state)
     # code_editor.change(code_editor_change, code_editor, None)
     # gr.on(triggers=None, fn=click_run_all_tests, inputs=[], every=2)
     # dep = demo.load(click_run_all_tests, inputs=[], outputs=[test_info_state], every=2)
