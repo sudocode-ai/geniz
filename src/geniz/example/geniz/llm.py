@@ -47,7 +47,7 @@ def query_llm(prompt: str, *, system_message: str = '', previous_history: List[C
         api_key=API_KEY,
         api_base=API_BASE,
         messages=final_messages,
-        temperature=1.2,
+        temperature=0.9,
         num_retries=1,
         n=n,
     )
