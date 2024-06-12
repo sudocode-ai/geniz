@@ -10,7 +10,7 @@ Geniz includes an interactive codegen app that allows humans to select candidate
 
 [![Demo Video](static/demo_1.gif)](https://www.youtube.com/watch?v=S_vB7qQ3qs4)
 
-Geniz combines approaches from [AgentCoder](https://arxiv.org/abs/2312.13010), [Reflexion](https://arxiv.org/abs/2303.11366[), and [Self-Consistency](https://arxiv.org/abs/2203.11171). The approach particularly excels with smaller models. We foresee this approach as an economical option for achieving high-quality results with lower hardware requirements.
+Geniz combines recent developed code-gen approaches like [AgentCoder](https://arxiv.org/abs/2312.13010), [Reflexion](https://arxiv.org/abs/2303.11366), and [Self-Consistency](https://arxiv.org/abs/2203.11171). The approach particularly excels with smaller models. We foresee this approach as an economical option for achieving high-quality results with lower hardware requirements.
 
 
 | Model                           | Baseline | Geniz (without human) |
