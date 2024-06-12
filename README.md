@@ -4,7 +4,7 @@ Code generation can be highly sensitive to prompting and initial conditions. Gen
 
 Given an input description of a coding task, the system generates, tests, and ranks a multitude of solutions to find the ones that perform the best.
 
-![diagram](static/geniz_diagram_light.png)
+![diagram](static/geniz_diagram.png)
 
 Geniz includes an interactive codegen app that allows humans to select candidate solutions and evolve them until they converge on a correct solution. The human serves as a flexible fitness function in selecting applicable tests and candidates to survive to the next generation.
 
