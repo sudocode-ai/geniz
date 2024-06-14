@@ -12,7 +12,7 @@ Geniz includes an interactive codegen app that allows humans to select candidate
 
 Geniz combines recent developed code-gen approaches like [AgentCoder](https://arxiv.org/abs/2312.13010), [Reflexion](https://arxiv.org/abs/2303.11366), and [Self-Consistency](https://arxiv.org/abs/2203.11171). The approach particularly excels with smaller models. We foresee this approach as an economical option for achieving high-quality results with lower hardware requirements.
 
-
+Benchmark Geniz without human invention on HumanEval dataset.
 | Model                           | Baseline | Geniz (without human) |
 | ------------------------------- | -------- | --------------------- |
 | OpenCodeInterpreter-1.3B        | 48.7%*   | 72.0% (+45%)          |
