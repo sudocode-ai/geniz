@@ -49,6 +49,9 @@ To get started with Geniz, follow these steps:
 We welcome contributions from the community! If you'd like to contribute to Geniz, please follow our contributing guidelines.
 Contact person: [Ning Ren](https://www.linkedin.com/in/renning22/), [Alex Ngai](https://www.linkedin.com/in/alexngai/) and [Randy Song](https://www.linkedin.com/in/randy-song/).
 
+
+Jon our [discord](https://discord.com/channels/1115708641052471446/1252342616394043446)!
+
 ## License
 
 Geniz is released under the MIT License.
